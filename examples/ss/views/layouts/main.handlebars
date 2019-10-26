@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>MySQL</title>
+	<link rel = "stylesheet" type="text/css" href="css/style.css"/>
+</head>
+
+<body>
+
+<fieldset><h2>Add Exercise</h2>
+	<form id="addForm">
+		Name:<br>
+		<input type="text" name="name" value="Example Name"><br>
+		Reps:<br>
+		<input type="text" name="reps" value=20><br>
+		Weight:<br>
+		<input type="text" name="weight" value=150><br>
+		Date:<br>
+		<input type="text" name="date" value="2019-03-06"><br>
+		Unit(lbs/kg):<br>
+		<input type="radio" name="unit" value="lb" checked> Pounds<br>
+		<input type="radio" name="unit" value="kg"> Kilograms<br><br>
+
+		<input type="button" value="Add Exercise Entry" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+
+  <script type-"text/javascript" src="js/script.js"></script>
+</body>
+
+</html>

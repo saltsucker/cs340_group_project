@@ -1,0 +1,24 @@
+body{
+	font-family:"Helvitica", Helvitica, sans-serif;
+}
+
+/*Edit table row color*/
+.editRow {
+	background-color: lightgray;
+}
+
+.editButton{
+	border-style:inset;
+}
+
+fieldset{
+	max-width: 500px;
+}
+
+#dataTable {
+	border-collapse: collapse;
+}
+
+tr:nth-child(even) {
+	background-color:#f2f2f2;
+}

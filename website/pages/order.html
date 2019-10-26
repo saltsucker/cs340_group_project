@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>order</title>
+</head>
+
+<body>
+
+<fieldset><h2>add order</h2>
+	<form id="add_order">
+		items ordered:<br>
+		<!-- will need to parse this data -->
+		<input type="text" name="items_ordered" value=""><br>
+		total sale:<br>
+		<input type="number" name="total_sale" value=""><br>
+		date sold:<br>
+		<input type="date" name="date_sold" value=""><br>
+
+		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+
+<fieldset><h2>search orders</h2>
+	<form id="search_order">
+		search orders:<br>
+		<input type="text" name="order_search_query"><br>
+		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+  <!--<script type="text/javascript" src="script.js"></script>-->
+</body>
+
+</html>
+
+
