@@ -8,10 +8,30 @@
 
 <body>
 
+<fieldset><h2>add album</h2>
+	<form id="add_album">
+		artist:<br>
+		<!-- will need to parse this data -->
+		<input type="text" name="artist" placeholder="Green Day" value=""><br>
+		album name:<br>
+		<input type="text" name="album" placeholder="Dookie" value=""><br>
+		genre:<br>
+		<input type="text" name="genre" placeholder="Rock" value=""><br>
+		quantity on hand:<br>
+		<input type="number" name="quantity" placeholder="100" value=""><br>
+		wholesale cost:<br>
+		<input type="number" name="wholesale" placeholder="$6.99" value=""><br>
+		cost to customer:<br>
+		<input type="number" name="cost" placeholder="$9.99" value=""><br>
+
+		<input type="button" value="add album" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+
 <fieldset><h2>search catalog</h2>
 	<form id="search">
 		search:<br>
-		<input type="text" name="search_query" value=""><br>
+		<input type="text" placeholder="Green Day/album_name/etc..." name="search_query" value=""><br>
 
 		<input type="button" value="search" onclick="addToDB('dataTable', this)" />
 	</form>
