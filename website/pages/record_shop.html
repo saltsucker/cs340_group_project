@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>record shop details</title>
+</head>
+
+<body>
+
+<fieldset><h2>add record shop</h2>
+	<form id="add_shop">
+		store name:<br>
+		<input type="text" placeholder="Hipster Music Store" name="store_name" value=""><br>
+		street address:<br>
+		<input type="text" name="address" placeholder="1234 Rockin Ave" value=""><br>
+		city:<br>
+		<input type="text" name="city" placeholder="Houston" value=""><br>
+		state:<br>
+		<input type="text" name="state" placeholder="TX" value=""><br>
+		zip code:<br>
+		<input type="number" name="zip" placeholder="71349" value=""><br>
+
+		<!-- this falls back to 'text' if browser does not support tel -->
+		telepone number:<br> 
+		<input type="tel" name="phone_number" placeholder="713-459-7811" value=><br>
+		annual sales:<br>
+		<input type="number" name="sales" placeholder="$100,000" value=""><br>
+
+		<input type="button" value="add new store" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+
+  <!--<script type="text/javascript" src="script.js"></script>-->
+</body>
+
+</html>
+
