@@ -12,11 +12,13 @@
 	<form id="add_order">
 		items ordered:<br>
 		<!-- will need to parse this data -->
-		<input type="text" name="items_ordered" value=""><br>
+		<input type="text" placeholder="1, 2, 6" name="items_ordered" value=""><br>
 		total sale:<br>
-		<input type="number" name="total_sale" value=""><br>
+		<input type="number" name="total_sale" placeholder="$45.33" value=""><br>
 		date sold:<br>
 		<input type="date" name="date_sold" value=""><br>
+		customer id:<br>
+		<input type="text" name="cusutomer_id" placeholder="3" value=""><br>
 
 		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
 	</form>
@@ -25,8 +27,8 @@
 <fieldset><h2>search orders</h2>
 	<form id="search_order">
 		search orders:<br>
-		<input type="text" name="order_search_query"><br>
-		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
+		<input type="text" placeholder="Green Day/order_id/etc..." name="order_search_query"><br>
+		<input type="button" value="search orders" onclick="addToDB('dataTable', this)" />
 	</form>
 </fieldset><br>
   <!--<script type="text/javascript" src="script.js"></script>-->
