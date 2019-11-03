@@ -3,11 +3,15 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>record shop details</title>
+	<title>shop info</title>
 	<link rel = "stylesheet" type="text/css" href="../style.css"/>
 </head>
 
 <body>
+	<div><a href="../index.html">home</a></div>
+	<div><a href="order.html">add order</a></div>
+	<div><a href="catalog.html">search catalog</a> 
+	<div><a href="customer.html">add customer</a></div>
 
 <fieldset><h2>add record shop</h2>
 	<form id="add_shop">
@@ -29,6 +33,13 @@
 		<input type="number" name="sales" placeholder="$100,000" value=""><br>
 
 		<input type="button" value="add new store" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+<fieldset><h2>search shop</h2>
+	<form id="search_shop">
+		search shop:<br>
+		<input type="text" placeholder="shop info..." name="shop_search_query"><br>
+		<input type="button" value="search shop" onclick="addToDB('dataTable', this)" />
 	</form>
 </fieldset><br>
 

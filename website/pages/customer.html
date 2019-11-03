@@ -7,6 +7,10 @@
 </head>
 
 <body>
+	<div><a href="../index.html">home</a></div>
+	<div><a href="order.html">add order</a></div>
+	<div><a href="catalog.html">search catalog</a></div>
+	<div><a href="record_shop.html">shop info</a></div>
 
 <fieldset><h2>add customer</h2>
 	<form id="add_customer">
@@ -20,6 +24,13 @@
 		<input type="tel" name="phone_number" placeholder="713-459-7811" value=><br>
 
 		<input type="button" value="add new customer" onclick="addToDB('dataTable', this)" />
+	</form>
+</fieldset><br>
+<fieldset><h2>search customer</h2>
+	<form id="search_customer">
+		search customer:<br>
+		<input type="text" placeholder="billy bob/id/address..." name="customer_search_query"><br>
+		<input type="button" value="search customer" onclick="addToDB('dataTable', this)" />
 	</form>
 </fieldset><br>
 
