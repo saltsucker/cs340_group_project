@@ -1,10 +1,10 @@
 /***************
 * Global Vars  *
 ***************/
-var COLUMNS = 7;
+var HEADER_NAMES = ["customer_id", "customer_fname", "customer_lname", "telephone"];
+var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
-var HEADER_NAMES = ["Order_ID", "Total_Items", "Date_Sold", "Customer_ID", "Total_Amount"];
 
 /***************
 * Create Table *
@@ -371,8 +371,8 @@ function buildTable(tableID, data){
 	//var tBody = document.getElementById(tableID).tBodies[0];
 	var tBody = document.getElementById("dataTable").tBodies[0];
 
-	// Order_ID", "Total_Items", "Date_Sold", "Customer_ID", "Total_Amount
-	var dict = {"order_id":1, "total_items":35, "date_sold":"05/24/1994", "customer_id":23, "total_amount":432};
+	// ["customer_fname", "customer_lname", "telephone"];
+	var dict = {"customer_id":1, "customer_fname":"Glenn", "customer_lname":"OOOOOBERlanderrrrr", "telephone":"555-555-5555"};
 	var data = [dict];
 
 	for(var i = 0; i < data.length; i++){
