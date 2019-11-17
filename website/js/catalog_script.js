@@ -1,10 +1,11 @@
 /***************
 * Global Vars  *
 ***************/
-var HEADER_NAMES = ["album_id", "artist_name", "album_name", "genre", "quantity_on_hand", "wholesale_cost", "customer_cost"];
+var HEADER_NAMES = ["album_id", "artist_name", "album_name", "genre", "inventory", "wholesale_cost", "retail_cost"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
+var TABLE_NAME = "album";
 
 /***************
 * Create Table *
@@ -60,8 +61,8 @@ for(i = 0; i < headers.length; i++){
 
 
 // TEMPORRARY, DELETE TO FILL IN ACTUAL DATA
-var data = {};
-buildTable(0, data);
+//var data = {};
+//buildTable(0, data);
 }
 
 function deleteRow(tableID, button){
@@ -259,21 +260,13 @@ function parseData(response){
 	dict = dict.results;
 
 	
-	for(var i = 0; i < dict.length; i++){
-		// Split the date to get rid of trailing "T" values
-		if(dict[i]['date']){
-			var date = dict[i]['date'].split("T")[0];
-		}
-		dict[i]['date'] = date;
-
-		// Change unit to 'lbs' or 'kgs'
-		if(dict[i]['unit'] == 0){
-			dict[i]['unit'] = 'lbs';
-		}
-		else{
-			dict[i]['unit'] = 'kg';
-		}
-	}
+	// for(var i = 0; i < dict.length; i++){
+	// 	// Split the date to get rid of trailing "T" values
+	// 	if(dict[i]['date']){
+	// 		var date = dict[i]['date'].split("T")[0];
+	// 	}
+	// 	dict[i]['date'] = date;
+	// }
 
 	return dict;
 }
@@ -294,6 +287,7 @@ function retrieveDB(tableID, button){
 
 				var data = parseData(response);
 
+				// Build table
 				buildTable(tableID, data);
 			}
 			else{
@@ -316,23 +310,18 @@ function addToDB(tableID, button){
 		var req = new XMLHttpRequest();	
 
 		// Get data in the form
-		var name = document.getElementById("addForm").elements["name"].value;
-		var reps = document.getElementById("addForm").elements["reps"].value;
-		var weight = document.getElementById("addForm").elements["weight"].value;
-		var date = document.getElementById("addForm").elements["date"].value;
-		var unit = document.getElementById("addForm").elements["unit"];
+		var artist_name = document.getElementById("add_album").elements["artist_name"].value;
+		var album_name = document.getElementById("add_album").elements["album_name"].value;
+		var genre = document.getElementById("add_album").elements["genre"].value;
+		var inventory = document.getElementById("add_album").elements["inventory"].value;
+		var wholesale_cost = document.getElementById("add_album").elements["wholesale_cost"].value;
+		var retail_cost = document.getElementById("add_album").elements["retail_cost"].value;
 
-		// If lbs is checked, set unit to 0, else kg == 1
-		if(unit[0].checked){
-			unit = 0;
-		}
-		else{
-			unit = 1;
-		}
-		if(name != ""){
-			console.log("name: " + name);
-			var getString = "name=" + name + "&reps=" + reps + "&weight=" + weight +
-							"&date=" + date + "&unit=" + unit;
+		if(artist_name != ""){
+			var getString = "table_name=" + TABLE_NAME + "&artist_name=" + artist_name 
+							+ "&retail_cost=" + retail_cost + "&wholesale_cost=" + wholesale_cost 
+							+ "&album_name=" + album_name + "&genre=" + genre 
+							+ "&inventory=" + inventory;
 
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
 
@@ -366,15 +355,92 @@ function addToDB(tableID, button){
 	}
 }
 
+function search(tableID, button){
+	try{
+		var req = new XMLHttpRequest();
+
+		var payload = {"table_name": "album"};
+
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
+		req.setRequestHeader('Content-Type', 'application/json');
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+				var data = parseData(response);
+
+				// Get the search term that the user is searching for
+				var searchQuery = document.getElementsByName("search_query")[0].value;
+
+				// Trim any white spaces from the head or tail of the search query
+				searchQuery = searchQuery.trim();
+
+				// Need to store the indeces from data[] to keep after we search data for valid matches
+				var iToKeep = [];
+
+				// Go through the data returned in the table (should be all the table data)
+				for(var i = 0; i < data.length; i++){
+					// Set found flag to 0. I.e., assume we won't find the searchQuery
+					var foundFlag = 0;
+
+					// Each ith element of data[] will be a row in the table. Go through each row
+					//	and search for searchQuery
+					for(key in data[i]){
+						// If the searchQuery is not in any of the data returned from the 
+						//	table (i.e., it wasn't searched for), delete it from the dictionary
+						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+							foundFlag = 1;
+						}
+					}
+					if(foundFlag){
+						iToKeep.push(i);
+					}
+				}
+
+				// Add the items we want to keep to a new array
+				var filteredData = [];
+
+				for(var i = 0; i < iToKeep.length; i++){
+					indexToKeep = iToKeep[i];
+					filteredData.push(data[indexToKeep]);
+				}
+
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table with filtered search data
+				buildTable(tableID, filteredData);
+
+			}
+			else{
+				// Something went wrong
+				console.log("Error in POST request: " + req.statusText)
+			}
+		});
+
+		var jsonPayload = JSON.stringify(payload);
+
+		// Send request
+		req.send(jsonPayload);
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
 function buildTable(tableID, data){
 	// Get first table body in table
 	//var tBody = document.getElementById(tableID).tBodies[0];
 	var tBody = document.getElementById("dataTable").tBodies[0];
 
 	// ["album_id", "artist_name", "album_name", "genre", "quantity_on_hand", "wholesale_cost", "customer_cost"];
-	var dict = {"album_id":1, "artist_name":"Green Day", "album_name": "Dookie", "genre":"Rock", "quantity_on_hand":100,
-				"wholesale_cost":"6.99", "customer_cost":"9.99"};
-	var data = [dict];
+	//var dict = {"album_id":1, "artist_name":"Green Day", "album_name": "Dookie", "genre":"Rock", "quantity_on_hand":100,
+	//			"wholesale_cost":"6.99", "customer_cost":"9.99"};
+	//var data = [dict];
 
 	for(var i = 0; i < data.length; i++){
 		// Create rows
@@ -390,7 +456,7 @@ function buildTable(tableID, data){
 				var hiddenField = document.createElement("input");
 				hiddenField.setAttribute("type", "hidden");
 				// hiddenField.setAttribute("name", "id");
-				hiddenField.setAttribute("id", "id_" + data[i]['id']);
+				hiddenField.setAttribute("id", "id_" + data[i]['album_id']);
 				col.appendChild(hiddenField);
 			}
 			else{
@@ -398,7 +464,7 @@ function buildTable(tableID, data){
 				if(j < COLUMNS-2){
 					// Add text field
 					var textField = document.createElement("input");
-					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i]['id']);
+					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i]['album_id']);
 					textField.readOnly = true;
 					col.appendChild(textField);
 				}
@@ -423,7 +489,7 @@ function buildTable(tableID, data){
 
 			// Add column to row
 			row.appendChild(col);
-			row.setAttribute("id", data[i]['id']);
+			row.setAttribute("id", data[i]['album_id']);
 		}
 
 		// Add row to table
@@ -431,10 +497,20 @@ function buildTable(tableID, data){
 
 		// Fill in text data
 		for(key in data[i]){
-		 	if(key){
-				var id = key + "_" + data[i]['id'];
-				document.getElementById(id).value = data[i][key];
-			}
+		 // 	if(key){
+			// 	var id = key + "_" + data[i]['album_id'];
+			// 	document.getElementById(id).value = data[i][key];
+			// }
+			document.getElementById(key + "_" + data[i]['album_id']).value = data[i][key];
 		}
+	}
+}
+
+function deleteTable(tableID){
+	// Delete table rows (minus header rows) if one exists
+	var table = document.getElementById(tableID);
+	
+	for(var i = table.rows.length-1; i > 0; i--){
+		table.deleteRow(i);
 	}
 }
