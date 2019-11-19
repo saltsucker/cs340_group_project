@@ -32,7 +32,53 @@ app.get('/', function(req, res, next){
 
 app.get('/retrieve',function(req,res,next){
 	var context = {};
-	mysql.pool.query('SELECT * FROM workouts', function(err, rows, fields){
+
+	if(req.query.table_name == "`order`"){
+		// Retrieve the table with the given table_name
+		
+		mysql.pool.query('SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
+						'`order`.date_sold, `order`.customer_id, customer.f_name, customer.l_name, ' +
+						'album.album_name ' +
+						'FROM (customer INNER JOIN `order` ON `order`.customer_id = customer.customer_id INNER JOIN ' + 
+						'order_album ON order_album.order_id = `order`.order_id INNER JOIN ' + 
+						'album ON album.album_id = order_album.album_id) ORDER BY `order`.order_id ASC', function(err, rows, fields){
+			if(err){
+				next(err);
+				return;
+			}
+			context.results = rows;
+			res.send(context);
+		});
+	}
+	else{
+		// Retrieve the table with the given table_name
+		mysql.pool.query('SELECT * FROM ' + req.query.table_name, function(err, rows, fields){
+			if(err){
+				next(err);
+				return;
+			}
+			context.results = rows;
+			res.send(context);
+		});
+	}	
+});
+
+app.post('/search',function(req,res,next){
+	var context = {};
+	
+	if(req.body['table_name'] == "album"){
+		var tableQuery = "SELECT * FROM album";	
+	}
+	else if(req.body['table_name'] == "order"){
+		var tableQuery = 'SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
+						'`order`.date_sold, `order`.customer_id, customer.f_name, customer.l_name, ' +
+						'album.album_name ' +
+						'FROM (customer INNER JOIN `order` ON `order`.customer_id = customer.customer_id INNER JOIN ' + 
+						'order_album ON order_album.order_id = `order`.order_id INNER JOIN ' + 
+						'album ON album.album_id = order_album.album_id) ORDER BY `order`.order_id ASC'
+	}
+
+	mysql.pool.query(tableQuery, function(err, rows, fields){
 		if(err){
 			next(err);
 			return;
@@ -43,12 +89,18 @@ app.get('/retrieve',function(req,res,next){
 	
 });
 
+
 app.get('/insert', function(req, res, next){
 	var context = {};
-	var list = [req.query.name, req.query.reps, req.query.weight, req.query.date, req.query.unit];
+	var list = [req.query.retail_cost, req.query.wholesale_cost, req.query.album_name, req.query.artist_name, 
+				req.query.genre, req.query.inventory];
+
+	if(req.query.table_name == "album"){
+		var tableQuery = "INSERT INTO album (retail_cost, wholesale_cost, album_name, artist_name, genre, inventory) VALUES(?, ?, ?, ?, ?, ?)";
+	}
 
 	// Insert row into table
-	mysql.pool.query("INSERT INTO workouts (`name`, reps, weight, date, unit) VALUES(?, ?, ?, ?, ?)", list, function(err, result){
+	mysql.pool.query(tableQuery, list, function(err, result){
 		if(err){
 			next(err);
 			return;
@@ -57,7 +109,7 @@ app.get('/insert', function(req, res, next){
 		var insertId = result.insertId
 
 		// Return data from the table in the database
-		mysql.pool.query('SELECT * FROM workouts WHERE id=?', [insertId], function(err, rows, fields){
+		mysql.pool.query('SELECT * FROM album WHERE album_id=?', [insertId], function(err, rows, fields){
 			if(err){
 				next(err);
 				return;
