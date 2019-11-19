@@ -159,7 +159,7 @@ function editRow(tableID, button){
 		else{
 			// Change button look
 			button.className = "editButton";
-			button.innerHTML = "Editing";
+			button.innerHTML = "Submit";
 		}
 
 		for(var i = 0; i < textFields.length; i++){
@@ -275,7 +275,9 @@ function retrieveDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
 
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve', true);
+
+		var getString = "table_name=" + TABLE_NAME;
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay

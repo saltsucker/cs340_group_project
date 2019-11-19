@@ -1,10 +1,12 @@
 /***************
 * Global Vars  *
 ***************/
-var HEADER_NAMES = ["order_id", "customer_fname", "customer_lname", "customer_id", "album_name", "total_items", "date_sold", "total_amount"];
+var HEADER_NAMES = ["order_id", "f_name", "l_name", "customer_id", "album_name", "order_qty", "date_sold", "total_sale"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
+var TABLE_NAME = "order";
+var ID_NAME = "order_id";
 
 /***************
 * Create Table *
@@ -58,10 +60,6 @@ for(i = 0; i < headers.length; i++){
 		headers[i].textContent = HEADER_NAMES[i];
 	}
 
-
-// TEMPORRARY, DELETE TO FILL IN ACTUAL DATA
-var data = {};
-buildTable(0, data);
 }
 
 function deleteRow(tableID, button){
@@ -158,7 +156,7 @@ function editRow(tableID, button){
 		else{
 			// Change button look
 			button.className = "editButton";
-			button.innerHTML = "Editing";
+			button.innerHTML = "Submit";
 		}
 
 		for(var i = 0; i < textFields.length; i++){
@@ -261,18 +259,10 @@ function parseData(response){
 	
 	for(var i = 0; i < dict.length; i++){
 		// Split the date to get rid of trailing "T" values
-		if(dict[i]['date']){
-			var date = dict[i]['date'].split("T")[0];
+		if(dict[i]['date_sold']){
+			var date = dict[i]['date_sold'].split("T")[0];
 		}
-		dict[i]['date'] = date;
-
-		// Change unit to 'lbs' or 'kgs'
-		if(dict[i]['unit'] == 0){
-			dict[i]['unit'] = 'lbs';
-		}
-		else{
-			dict[i]['unit'] = 'kg';
-		}
+		dict[i]['date_sold'] = date;
 	}
 
 	return dict;
@@ -280,9 +270,10 @@ function parseData(response){
 
 function retrieveDB(tableID, button){
 	try{
-		var req = new XMLHttpRequest();	
+		var req = new XMLHttpRequest();
 
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve', true);
+		var getString = "table_name=`" + TABLE_NAME + "`";
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
@@ -294,6 +285,7 @@ function retrieveDB(tableID, button){
 
 				var data = parseData(response);
 
+				// Build table
 				buildTable(tableID, data);
 			}
 			else{
@@ -315,51 +307,166 @@ function addToDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
 
+		//["order_id", "customer_fname", "customer_lname", "customer_id", "album_name", "total_items", "date_sold", "total_amount"];
+
 		// Get data in the form
-		var name = document.getElementById("addForm").elements["name"].value;
-		var reps = document.getElementById("addForm").elements["reps"].value;
-		var weight = document.getElementById("addForm").elements["weight"].value;
-		var date = document.getElementById("addForm").elements["date"].value;
-		var unit = document.getElementById("addForm").elements["unit"];
+		var album_names = document.getElementById("add_order").elements["album_names"].value;
+		var date_sold = document.getElementById("add_order").elements["date_sold"].value;
+		var customer_id = document.getElementById("add_order").elements["customer_id"].value;
 
-		// If lbs is checked, set unit to 0, else kg == 1
-		if(unit[0].checked){
-			unit = 0;
-		}
-		else{
-			unit = 1;
-		}
-		if(name != ""){
-			console.log("name: " + name);
-			var getString = "name=" + name + "&reps=" + reps + "&weight=" + weight +
-							"&date=" + date + "&unit=" + unit;
+		// if(artist_name != ""){
+		// 	var getString = "table_name=" + TABLE_NAME + "&artist_name=" + artist_name 
+		// 					+ "&retail_cost=" + retail_cost + "&wholesale_cost=" + wholesale_cost 
+		// 					+ "&album_name=" + album_name + "&genre=" + genre 
+		// 					+ "&inventory=" + inventory;
 
-			req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
+		// 	req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
 
-			req.addEventListener('load', function(){			
-				// Request was okay
-				if (req.status > 199 && req.status < 400){
-					// Parse data and put in array
-					if(req.response != null){
-						var response = req.response;
-					}
-					var data = parseData(response);
+		// 	req.addEventListener('load', function(){			
+		// 		// Request was okay
+		// 		if (req.status > 199 && req.status < 400){
+		// 			// Parse data and put in array
+		// 			if(req.response != null){
+		// 				var response = req.response;
+		// 			}
+		// 			var data = parseData(response);
 
-					buildTable(tableID, data);
+		// 			buildTable(tableID, data);
+		// 		}
+		// 		else{
+		// 			// Something went wrong
+		// 			console.log("Error in GET request: " + req.statusText)
+		// 		}
+		// 	});
+
+		// 	// Send request
+		// 	req.send(null);
+		// }
+		// else{
+		// 	alert("Name must be a value. Exercise not added to Database.");
+		// }
+
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
+function search(tableID, button){
+	logCustomers();
+	// Uncomment all of below to get search working again
+	// try{
+	// 	var req = new XMLHttpRequest();
+	// 	var payload = {"table_name": TABLE_NAME};
+
+	// 	req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
+	// 	req.setRequestHeader('Content-Type', 'application/json');
+
+	// 	req.addEventListener('load', function(){			
+	// 		// Request was okay
+	// 		if (req.status > 199 && req.status < 400){
+	// 			// Parse data and put in array
+	// 			if(req.response != null){
+	// 				var response = req.response;
+	// 			}
+	// 			var data = parseData(response);
+
+	// 			// Get the search term that the user is searching for
+	// 			var searchQuery = document.getElementsByName("search_query")[0].value;
+
+	// 			// Trim any white spaces from the head or tail of the search query
+	// 			searchQuery = searchQuery.trim();
+
+	// 			// Need to store the indeces from data[] to keep after we search data for valid matches
+	// 			var iToKeep = [];
+
+	// 			// Go through the data returned in the table (should be all the table data)
+	// 			for(var i = 0; i < data.length; i++){
+	// 				// Set found flag to 0. I.e., assume we won't find the searchQuery
+	// 				var foundFlag = 0;
+
+	// 				// Each ith element of data[] will be a row in the table. Go through each row
+	// 				//	and search for searchQuery
+	// 				for(key in data[i]){
+	// 					// If the searchQuery is not in any of the data returned from the 
+	// 					//	table (i.e., it wasn't searched for), delete it from the dictionary
+	// 					if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+	// 						foundFlag = 1;
+	// 					}
+	// 				}
+	// 				if(foundFlag){
+	// 					iToKeep.push(i);
+	// 				}
+	// 			}
+
+	// 			// Add the items we want to keep to a new array
+	// 			var filteredData = [];
+
+	// 			for(var i = 0; i < iToKeep.length; i++){
+	// 				indexToKeep = iToKeep[i];
+	// 				filteredData.push(data[indexToKeep]);
+	// 			}
+
+	// 			// Delete table because we're going to rebuild it with new data
+	// 			deleteTable(tableID);
+
+	// 			// Build table with filtered search data
+	// 			buildTable(tableID, filteredData);
+
+	// 		}
+	// 		else{
+	// 			// Something went wrong
+	// 			console.log("Error in POST request: " + req.statusText)
+	// 		}
+	// 	});
+
+	// 	var jsonPayload = JSON.stringify(payload);
+
+	// 	// Send request
+	// 	req.send(jsonPayload);
+	// }
+	// catch(e){
+	// 	alert(e);
+	// }
+}
+
+let logCustomers = async function(){
+	let value;
+	value = await getCustomers();
+	console.log(value);
+
+	return value;
+}
+
+async function getCustomers(){
+	try{
+		var req = new XMLHttpRequest();
+		var payload = {"table_name": TABLE_NAME};
+
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
+		req.setRequestHeader('Content-Type', 'application/json');
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
 				}
-				else{
-					// Something went wrong
-					console.log("Error in GET request: " + req.statusText)
-				}
-			});
+				var data = parseData(response);
 
-			// Send request
-			req.send(null);
-		}
-		else{
-			alert("Name must be a value. Exercise not added to Database.");
-		}
+				return data;
+			}
+			else{
+				// Something went wrong
+				console.log("Error in POST request: " + req.statusText)
+			}
+		});
 
+		var jsonPayload = JSON.stringify(payload);
+
+		// Send request
+		req.send(jsonPayload);
 	}
 	catch(e){
 		alert(e);
@@ -370,11 +477,6 @@ function buildTable(tableID, data){
 	// Get first table body in table
 	//var tBody = document.getElementById(tableID).tBodies[0];
 	var tBody = document.getElementById("dataTable").tBodies[0];
-
-	// Order_ID", "Total_Items", "Date_Sold", "Customer_ID", "Total_Amount
-	var dict = {"order_id":1, "customer_fname":"Tim", "customer_lname":"Withers", "customer_id":5,
-				"total_items":35, "date_sold":"05/24/1994", "total_amount":432};
-	var data = [dict];
 
 	for(var i = 0; i < data.length; i++){
 		// Create rows
@@ -389,8 +491,7 @@ function buildTable(tableID, data){
 			if(j == COLUMNS-1){
 				var hiddenField = document.createElement("input");
 				hiddenField.setAttribute("type", "hidden");
-				// hiddenField.setAttribute("name", "id");
-				hiddenField.setAttribute("id", "id_" + data[i]['id']);
+				hiddenField.setAttribute("id", i + "_" + "id_" + data[i][ID_NAME]);
 				col.appendChild(hiddenField);
 			}
 			else{
@@ -398,7 +499,7 @@ function buildTable(tableID, data){
 				if(j < COLUMNS-2){
 					// Add text field
 					var textField = document.createElement("input");
-					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i]['id']);
+					textField.setAttribute("id", i + "_" + HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
 					textField.readOnly = true;
 					col.appendChild(textField);
 				}
@@ -423,7 +524,7 @@ function buildTable(tableID, data){
 
 			// Add column to row
 			row.appendChild(col);
-			row.setAttribute("id", data[i]['id']);
+			// row.setAttribute("id", i + "_" + data[i][ID_NAME]);
 		}
 
 		// Add row to table
@@ -431,10 +532,19 @@ function buildTable(tableID, data){
 
 		// Fill in text data
 		for(key in data[i]){
-		 	if(key){
-				var id = key + "_" + data[i]['id'];
-				document.getElementById(id).value = data[i][key];
-			}
-		}
+			// Make sure this element exists in the table
+			if(document.getElementById(i + "_" + key + "_" + data[i][ID_NAME])){
+				document.getElementById(i + "_" + key + "_" + data[i][ID_NAME]).value = data[i][key];	
+			}			
+		 }
+	}
+}
+
+function deleteTable(tableID){
+	// Delete table rows (minus header rows) if one exists
+	var table = document.getElementById(tableID);
+	
+	for(var i = table.rows.length-1; i > 0; i--){
+		table.deleteRow(i);
 	}
 }

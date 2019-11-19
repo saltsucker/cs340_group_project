@@ -158,7 +158,7 @@ function editRow(tableID, button){
 		else{
 			// Change button look
 			button.className = "editButton";
-			button.innerHTML = "Editing";
+			button.innerHTML = "Submit";
 		}
 
 		for(var i = 0; i < textFields.length; i++){

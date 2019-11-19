@@ -23,7 +23,7 @@
 		date sold:<br>
 		<input type="date" name="date_sold" value=""><br>
 		customer id:<br>
-		<input type="text" name="cusutomer_id" placeholder="3" value=""><br>
+		<input type="text" name="customer_id" placeholder="3" value=""><br>
 
 		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
 	</form>
@@ -32,8 +32,8 @@
 <fieldset><h2>search orders</h2>
 	<form id="search_order">
 		search orders:<br>
-		<input type="text" placeholder="Green Day/order_id/etc..." name="order_search_query"><br>
-		<input type="button" value="search orders" onclick="addToDB('dataTable', this)" />
+		<input type="text" placeholder="Green Day/order_id/etc..." name="search_query"><br>
+		<input type="button" value="search orders" onclick="search('dataTable', this)" />
 	</form>
 </fieldset><br>
   <script type="text/javascript" src="../js/order_script.js"></script>
