@@ -6,6 +6,7 @@ var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "album";
+var SQLPORT = "50262"
 
 /***************
 * Create Table *
@@ -88,7 +89,7 @@ function deleteRow(tableID, button){
 			// Setup POST request
 			var req = new XMLHttpRequest();
 
-			req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/delete', true);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT+ '/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
 
 			req.addEventListener('load', function(){			
@@ -215,7 +216,7 @@ function stopEditRow(tableID, button){
 
 		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/edit', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
@@ -277,7 +278,7 @@ function retrieveDB(tableID, button){
 
 
 		var getString = "table_name=" + TABLE_NAME;
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve?' + getString, true);
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
@@ -325,7 +326,7 @@ function addToDB(tableID, button){
 							+ "&album_name=" + album_name + "&genre=" + genre 
 							+ "&inventory=" + inventory;
 
-			req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/insert?' + getString, true);
 
 			req.addEventListener('load', function(){			
 				// Request was okay
@@ -363,7 +364,7 @@ function search(tableID, button){
 
 		var payload = {"table_name": "album"};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/search', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
