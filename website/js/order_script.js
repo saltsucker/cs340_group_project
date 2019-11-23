@@ -7,6 +7,13 @@ var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "order";
 var ID_NAME = "order_id";
+var SQLPORT = "50262"
+
+// Populate customer list
+populateCustomerList();
+
+// Populate album name list
+populateAlbumNames();
 
 /***************
 * Create Table *
@@ -85,7 +92,7 @@ function deleteRow(tableID, button){
 			// Setup POST request
 			var req = new XMLHttpRequest();
 
-			req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/delete', true);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
 
 			req.addEventListener('load', function(){			
@@ -97,23 +104,11 @@ function deleteRow(tableID, button){
 					}
 					var data = parseData(response);
 
-					var table = document.getElementById(tableID);
-					var rowCount = table.rows.length;
-					var currentRow = button.parentElement.parentElement;
+					// Delete table because we're going to rebuild it with new data
+					deleteTable(tableID);
 
-					for(var i = 0; i < rowCount; i++){
-						var row = table.rows[i];
-
-						if(row == currentRow){
-							if(rowCount < 3){
-								alert("Cannot delete all the rows.");
-								break;
-							}
-							table.deleteRow(i);
-							rowCount--;
-							i--;
-						}
-					}
+					// Build table back up with new data
+					buildTable(tableID, data);
 				}
 				else{
 					// Something went wrong
@@ -122,7 +117,14 @@ function deleteRow(tableID, button){
 			});
 
 			/*************INFORMATION FOR POST****************/
-			var payload = {id : currentRow.getAttribute("id")};
+			// Get the first child/column of the row. This will be the order_id
+			order_id = currentRow.cells[0].firstChild.value;
+
+			var payload = {table_name: TABLE_NAME,
+							id: order_id};
+
+			// console.log(currentRow)
+			// console.log(payload);
 			jsonPayload = JSON.stringify(payload);
 
 			// Send request
@@ -212,7 +214,7 @@ function stopEditRow(tableID, button){
 
 		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/edit', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
@@ -273,7 +275,7 @@ function retrieveDB(tableID, button){
 		var req = new XMLHttpRequest();
 
 		var getString = "table_name=`" + TABLE_NAME + "`";
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve?' + getString, true);
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
@@ -305,46 +307,77 @@ function retrieveDB(tableID, button){
 
 function addToDB(tableID, button){
 	try{
-		var req = new XMLHttpRequest();	
+
+		// TESTING FETCH
+		// async function getCustomers(){
+		// 	var getString = "table_name=" + "customer";
+		// 	var url = 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString;
+		// 	let response = await fetch(url);
+		// 	return await response.json();
+		// }
+	
+		// var customerData = getCustomers().then(function(data){
+		// 	console.log(data);
+		// 	return data;
+		// });
+		// END TESTING
+
+
+		var req = new XMLHttpRequest();
 
 		//["order_id", "customer_fname", "customer_lname", "customer_id", "album_name", "total_items", "date_sold", "total_amount"];
 
-		// Get data in the form
-		var album_names = document.getElementById("add_order").elements["album_names"].value;
+		// Get album names and split if there are multiple ones
+		var album_name_string = document.getElementById("add_order").elements["album_names"].value;
+		var album_names = album_name_string.split(",");
+
+		// Get date sold
 		var date_sold = document.getElementById("add_order").elements["date_sold"].value;
-		var customer_id = document.getElementById("add_order").elements["customer_id"].value;
 
-		// if(artist_name != ""){
-		// 	var getString = "table_name=" + TABLE_NAME + "&artist_name=" + artist_name 
-		// 					+ "&retail_cost=" + retail_cost + "&wholesale_cost=" + wholesale_cost 
-		// 					+ "&album_name=" + album_name + "&genre=" + genre 
-		// 					+ "&inventory=" + inventory;
+		// Get customer name and split into first and last name
+		var customer_name = document.getElementById("customerList").value;
+		var f_name = customer_name.split(" ")[0]
+		var l_name = customer_name.split(" ")[1]
 
-		// 	req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
+		// Get total sale amount
+		var total_sales = document.getElementsByName("total_sale")[0].value;
+		total_sales = total_sales.replace("$", "");
 
-		// 	req.addEventListener('load', function(){			
-		// 		// Request was okay
-		// 		if (req.status > 199 && req.status < 400){
-		// 			// Parse data and put in array
-		// 			if(req.response != null){
-		// 				var response = req.response;
-		// 			}
-		// 			var data = parseData(response);
+		if(customer_name != ""){
+			var getString = "table_name=" + TABLE_NAME + "&order_qty=" + album_names.length +
+			"&total_sale=" + total_sales + "&date_sold=" + date_sold + 
+			"&f_name=" + f_name + "&l_name=" + l_name;
 
-		// 			buildTable(tableID, data);
-		// 		}
-		// 		else{
-		// 			// Something went wrong
-		// 			console.log("Error in GET request: " + req.statusText)
-		// 		}
-		// 	});
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/insert?' + getString, true);
 
-		// 	// Send request
-		// 	req.send(null);
-		// }
-		// else{
-		// 	alert("Name must be a value. Exercise not added to Database.");
-		// }
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						var response = req.response;
+					}
+
+					// After the order is entered (happened above), now add the 
+					// relationship between the order and the album
+					addOrderAlbum(album_names, tableID);
+
+				}
+				else{
+					// Something went wrong
+					console.log("Error in GET request: " + req.statusText)
+				}
+			});
+
+			// Send request
+			req.send(null);
+
+			// Clear form
+			resetForm();
+		}
+		else{
+			alert("Name must be a value. Order not added to Database.");
+		}
 
 	}
 	catch(e){
@@ -352,98 +385,59 @@ function addToDB(tableID, button){
 	}
 }
 
-function search(tableID, button){
-	logCustomers();
+function resetForm(){
+	document.getElementById("add_order").elements["album_names"].value = "";
+	document.getElementsByName("total_sale")[0].value = "";
+}
+
+/*************************
+* addOrderAlbum will add the relationship between album_names
+* and the MAX(order_id). I.e., the order that was JUST entered
+**************************/
+function addOrderAlbum(album_names, tableID){
+	try{
+		var req = new XMLHttpRequest();
+
+		var getString = "table_name=order_album" + "&album_names=" + album_names;
+
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/insert?' + getString, true);
+
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						var response = req.response;
+					}
+					var data = parseData(response);
+
+					// Delete table because we're going to rebuild it with new data
+					deleteTable(tableID);
+
+					// Build table back up with new data
+					buildTable(tableID, data);
+				}
+				else{
+					// Something went wrong
+					console.log("Error in GET request: " + req.statusText)
+				}
+			});
+
+			// Send request
+			req.send(null);
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
+function searchBtn(tableID, button){
 	// Uncomment all of below to get search working again
-	// try{
-	// 	var req = new XMLHttpRequest();
-	// 	var payload = {"table_name": TABLE_NAME};
-
-	// 	req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
-	// 	req.setRequestHeader('Content-Type', 'application/json');
-
-	// 	req.addEventListener('load', function(){			
-	// 		// Request was okay
-	// 		if (req.status > 199 && req.status < 400){
-	// 			// Parse data and put in array
-	// 			if(req.response != null){
-	// 				var response = req.response;
-	// 			}
-	// 			var data = parseData(response);
-
-	// 			// Get the search term that the user is searching for
-	// 			var searchQuery = document.getElementsByName("search_query")[0].value;
-
-	// 			// Trim any white spaces from the head or tail of the search query
-	// 			searchQuery = searchQuery.trim();
-
-	// 			// Need to store the indeces from data[] to keep after we search data for valid matches
-	// 			var iToKeep = [];
-
-	// 			// Go through the data returned in the table (should be all the table data)
-	// 			for(var i = 0; i < data.length; i++){
-	// 				// Set found flag to 0. I.e., assume we won't find the searchQuery
-	// 				var foundFlag = 0;
-
-	// 				// Each ith element of data[] will be a row in the table. Go through each row
-	// 				//	and search for searchQuery
-	// 				for(key in data[i]){
-	// 					// If the searchQuery is not in any of the data returned from the 
-	// 					//	table (i.e., it wasn't searched for), delete it from the dictionary
-	// 					if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
-	// 						foundFlag = 1;
-	// 					}
-	// 				}
-	// 				if(foundFlag){
-	// 					iToKeep.push(i);
-	// 				}
-	// 			}
-
-	// 			// Add the items we want to keep to a new array
-	// 			var filteredData = [];
-
-	// 			for(var i = 0; i < iToKeep.length; i++){
-	// 				indexToKeep = iToKeep[i];
-	// 				filteredData.push(data[indexToKeep]);
-	// 			}
-
-	// 			// Delete table because we're going to rebuild it with new data
-	// 			deleteTable(tableID);
-
-	// 			// Build table with filtered search data
-	// 			buildTable(tableID, filteredData);
-
-	// 		}
-	// 		else{
-	// 			// Something went wrong
-	// 			console.log("Error in POST request: " + req.statusText)
-	// 		}
-	// 	});
-
-	// 	var jsonPayload = JSON.stringify(payload);
-
-	// 	// Send request
-	// 	req.send(jsonPayload);
-	// }
-	// catch(e){
-	// 	alert(e);
-	// }
-}
-
-let logCustomers = async function(){
-	let value;
-	value = await getCustomers();
-	console.log(value);
-
-	return value;
-}
-
-async function getCustomers(){
 	try{
 		var req = new XMLHttpRequest();
 		var payload = {"table_name": TABLE_NAME};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/search', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/search', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
@@ -455,7 +449,48 @@ async function getCustomers(){
 				}
 				var data = parseData(response);
 
-				return data;
+				// Get the search term that the user is searching for
+				var searchQuery = document.getElementsByName("search_query")[0].value;
+
+				// Trim any white spaces from the head or tail of the search query
+				searchQuery = searchQuery.trim();
+
+				// Need to store the indeces from data[] to keep after we search data for valid matches
+				var iToKeep = [];
+
+				// Go through the data returned in the table (should be all the table data)
+				for(var i = 0; i < data.length; i++){
+					// Set found flag to 0. I.e., assume we won't find the searchQuery
+					var foundFlag = 0;
+
+					// Each ith element of data[] will be a row in the table. Go through each row
+					//	and search for searchQuery
+					for(key in data[i]){
+						// If the searchQuery is not in any of the data returned from the 
+						//	table (i.e., it wasn't searched for), delete it from the dictionary
+						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+							foundFlag = 1;
+						}
+					}
+					if(foundFlag){
+						iToKeep.push(i);
+					}
+				}
+
+				// Add the items we want to keep to a new array
+				var filteredData = [];
+
+				for(var i = 0; i < iToKeep.length; i++){
+					indexToKeep = iToKeep[i];
+					filteredData.push(data[indexToKeep]);
+				}
+
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table with filtered search data
+				buildTable(tableID, filteredData);
+
 			}
 			else{
 				// Something went wrong
@@ -470,6 +505,52 @@ async function getCustomers(){
 	}
 	catch(e){
 		alert(e);
+	}
+}
+
+function populateCustomerList(){
+	try{
+		var req = new XMLHttpRequest();
+
+		var getString = "table_name=customer";
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+
+				var data = parseData(response);
+
+				addCustomerNames(data);
+			}
+			else{
+				// Something went wrong
+				console.log("Error in GET request: " + req.statusText)
+			}
+		});
+
+		// Send request
+		req.send(null);
+
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
+function addCustomerNames(data){
+	var customerList = document.getElementById("customerList");
+	
+	for(var i = 0; i < data.length; i++){
+		var option = document.createElement("option");
+		//option.text = data[i]["customer_id"] + "_" + data[i]["f_name"] + "_" + data[i]["l_name"];
+		option.text = data[i]["f_name"] + " " + data[i]["l_name"];
+		customerList.add(option);
+		//console.log(data[i]["customer_id"]);
 	}
 }
 
@@ -548,3 +629,103 @@ function deleteTable(tableID){
 		table.deleteRow(i);
 	}
 }
+
+/*************************
+* This function will populate the drop down menu with whatever
+* album names are currently in the order table.
+**************************/
+function populateAlbumNames(){
+	try{
+		var req = new XMLHttpRequest();
+
+		var getString = "table_name=album_names";
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+
+				var data = parseData(response);
+
+				// Populate list with album names
+				var albumDiv = document.getElementById("anamediv");
+				for(var i = 0; i < data.length; i++){
+					if(i == 0){
+						// If this is the first element, make a "clear text box" option
+						var aTag = document.createElement('a');
+						aTag.setAttribute('href', "#");
+						aTag.setAttribute('onclick', 'fillAlbumNameTextBox(this)');
+						aTag.innerText = "clear text box";
+						albumDiv.appendChild(aTag);
+					}
+					
+					var aTag = document.createElement('a');
+					aTag.setAttribute('href', "#");
+					aTag.setAttribute('onclick', 'fillAlbumNameTextBox(this)');
+					aTag.innerText = String(data[i]['album_name']).toLowerCase() + 
+						" - $" + String(data[i]['retail_cost']);
+					albumDiv.appendChild(aTag);
+					
+				}
+			}
+			else{
+				// Something went wrong
+				console.log("Error in GET request: " + req.statusText)
+			}
+		});
+
+		// Send request
+		req.send(null);
+
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
+// Fill in the album name text box from user clicking links
+function fillAlbumNameTextBox(link){
+	var linkText = String(link.text).split(" - ");
+	var albumName = linkText[0];
+	var cost = linkText[1];
+	var albumNameBox = document.getElementsByName("album_names")[0];
+	var totalSaleBox = document.getElementsByName("total_sale")[0];
+
+	// Get current text if there is any
+	currentNameText = albumNameBox.value;
+
+	// Remove the "$" if cost exists
+	if(cost){
+		cost = cost.replace("$", "");
+	}
+
+	//console.log(currentTotal);
+
+	// If user selected the "clear" option, clear the text box
+	if(albumName.indexOf("clear") > -1){
+		albumNameBox.value = "";
+		totalSaleBox.value = "";
+	}
+	else if(!currentNameText){
+		// If current text is empty, don't add a ','
+		albumNameBox.value = albumName;
+		totalSaleBox.value = "$" + cost;
+	}
+	else{
+		// Fill in album names
+		albumNameBox.value = currentNameText + ", " + albumName;
+
+		// Update and fill in total cost
+		var temp = totalSaleBox.value;
+		temp = temp.replace("$", "");
+		temp = parseFloat(temp) + parseFloat(cost);
+
+		totalSaleBox.value = "$" + String(temp);
+	}
+}
+
+ 

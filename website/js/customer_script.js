@@ -5,6 +5,7 @@ var HEADER_NAMES = ["customer_id", "customer_fname", "customer_lname", "telephon
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
+var SQLPORT = "50262"
 
 /***************
 * Create Table *
@@ -87,7 +88,7 @@ function deleteRow(tableID, button){
 			// Setup POST request
 			var req = new XMLHttpRequest();
 
-			req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/delete', true);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
 
 			req.addEventListener('load', function(){			
@@ -214,7 +215,7 @@ function stopEditRow(tableID, button){
 
 		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:50261/edit', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
@@ -282,7 +283,7 @@ function retrieveDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
 
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/retrieve', true);
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/retrieve', true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
@@ -334,7 +335,7 @@ function addToDB(tableID, button){
 			var getString = "name=" + name + "&reps=" + reps + "&weight=" + weight +
 							"&date=" + date + "&unit=" + unit;
 
-			req.open('GET', 'http://flip3.engr.oregonstate.edu:50261/insert?' + getString, true);
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/insert?' + getString, true);
 
 			req.addEventListener('load', function(){			
 				// Request was okay

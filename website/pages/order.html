@@ -15,15 +15,22 @@
 
 <fieldset><h2>add order</h2>
 	<form id="add_order">
-		album names:<br>
+		album names for order:<br>
 		<!-- will need to parse this data -->
-		<input type="text" placeholder="nimrod, dookie" name="album_names" value=""><br>
+		<input type="text" placeholder="Add albums with menu ->" name="album_names" value="" readonly>
+		<div class="dropdown">
+			<button class="dropbtn">select album names</button>
+			<div id="anamediv" class="dropdown-content">
+			</div>
+		</div><br>
+
 		total sale:<br>
-		<input type="number" name="total_sale" placeholder="$45.33" value=""><br>
+		<input type="text" name="total_sale" placeholder="$45.33" value=""><br>
 		date sold:<br>
 		<input type="date" name="date_sold" value=""><br>
-		customer id:<br>
-		<input type="text" name="customer_id" placeholder="3" value=""><br>
+		<label>customer name: </label> <br>
+		<select id = "customerList">
+		</select> <br> <br>
 
 		<input type="button" value="add order" onclick="addToDB('dataTable', this)" />
 	</form>
@@ -33,7 +40,7 @@
 	<form id="search_order">
 		search orders:<br>
 		<input type="text" placeholder="Green Day/order_id/etc..." name="search_query"><br>
-		<input type="button" value="search orders" onclick="search('dataTable', this)" />
+		<input type="button" value="search orders" onclick="searchBtn('dataTable', this)" />
 	</form>
 </fieldset><br>
   <script type="text/javascript" src="../js/order_script.js"></script>
