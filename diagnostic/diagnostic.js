@@ -15,11 +15,7 @@ app.use(express.static('public'));
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-<<<<<<< HEAD
 app.set('port', 58376);
-=======
-app.set('port', 50263);
->>>>>>> 6eb602c64847dcc2973de72ed5dab3de0f8bf41f
 
 app.use(function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');

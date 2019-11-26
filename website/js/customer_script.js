@@ -7,11 +7,7 @@ var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_NAME = "customer";
 var TABLE_ID = "dataTable";
-<<<<<<< HEAD
 var SQLPORT = "58376";
-=======
-var SQLPORT = "50263"
->>>>>>> 6eb602c64847dcc2973de72ed5dab3de0f8bf41f
 
 /***************
 * Create Table *
@@ -75,10 +71,9 @@ function deleteRow(tableID, button){
 	try{
 		// Get current row
 		var table = document.getElementById(tableID);
-		console.log("table id: " + table)
 		var rowCount = table.rows.length;
 		var currentRow = button.parentElement.parentElement;
-		console.log("current row: " + currentRow);
+
 		// CHECK AND MAKE SURE THERE'S NO LESS THAN 1 INFORMATION ROW.
 		//	IF THERE IS, DON'T DELETE ANYTHING.
 		if(rowCount >= 3){
@@ -96,8 +91,6 @@ function deleteRow(tableID, button){
 			var req = new XMLHttpRequest();
 
 			// get the customer id of the row
-			var rowID = currentRow.getAttribute("customer_id");
-			console.log("Row id to be deleted: " + rowID)
 
 			req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
@@ -136,10 +129,11 @@ function deleteRow(tableID, button){
 			});
 
 			/*************INFORMATION FOR POST****************/
-			var payload = {id : currentRow.getAttribute("id")};
+			var payload = {id : currentRow.getAttribute("customer_id")};
 			jsonPayload = JSON.stringify(payload);
-
+			console.log(payload);
 			// Send request
+			console.log("Row id to be deleted: " + jsonPayload)
 			req.send(jsonPayload);
 		}
 		else{
