@@ -7,6 +7,7 @@ var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "album";
 //var SQLPORT = "58376"
+var SQLPORT = "50263"
 
 /***************
 * Create Table *
