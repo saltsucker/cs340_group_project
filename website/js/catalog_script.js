@@ -6,7 +6,7 @@ var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "album";
-var SQLPORT = "50262"
+var SQLPORT = "58376"
 
 /***************
 * Create Table *
@@ -326,17 +326,19 @@ function addToDB(tableID, button){
 							+ "&album_name=" + album_name + "&genre=" + genre 
 							+ "&inventory=" + inventory;
 
-			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/insert?' + getString, true);
+console.log(getString);
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
 
 			req.addEventListener('load', function(){			
 				// Request was okay
 				if (req.status > 199 && req.status < 400){
 					// Parse data and put in array
 					if(req.response != null){
+						console.log("response was successful");
 						var response = req.response;
 					}
 					var data = parseData(response);
-
+					console.log(data);
 					buildTable(tableID, data);
 				}
 				else{

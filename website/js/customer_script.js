@@ -1,11 +1,13 @@
+
 /***************
 * Global Vars  *
 ***************/
 var HEADER_NAMES = ["customer_id", "customer_fname", "customer_lname", "telephone"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
+var TABLE_NAME = "customer";
 var TABLE_ID = "dataTable";
-var SQLPORT = "50262"
+var SQLPORT = "58376";
 
 /***************
 * Create Table *
@@ -69,9 +71,10 @@ function deleteRow(tableID, button){
 	try{
 		// Get current row
 		var table = document.getElementById(tableID);
+		console.log("table id: " + table)
 		var rowCount = table.rows.length;
 		var currentRow = button.parentElement.parentElement;
-
+		console.log("current row: " + currentRow);
 		// CHECK AND MAKE SURE THERE'S NO LESS THAN 1 INFORMATION ROW.
 		//	IF THERE IS, DON'T DELETE ANYTHING.
 		if(rowCount >= 3){
@@ -87,6 +90,10 @@ function deleteRow(tableID, button){
 
 			// Setup POST request
 			var req = new XMLHttpRequest();
+
+			// get the customer id of the row
+			var rowID = currentRow.getAttribute("customer_id");
+			console.log("Row id to be deleted: " + rowID)
 
 			req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
@@ -179,6 +186,7 @@ function stopEditRow(tableID, button){
 
 		// Do stuff with the table
 		var table = document.getElementById(tableID);
+		
 		var rowCount = table.rows.length;
 		var currentRow = button.parentElement.parentElement;
 
@@ -260,7 +268,7 @@ function parseData(response){
 	dict = dict.results;
 
 	
-	for(var i = 0; i < dict.length; i++){
+	/*for(var i = 0; i < dict.length; i++){
 		// Split the date to get rid of trailing "T" values
 		if(dict[i]['date']){
 			var date = dict[i]['date'].split("T")[0];
@@ -274,7 +282,7 @@ function parseData(response){
 		else{
 			dict[i]['unit'] = 'kg';
 		}
-	}
+	}*/
 
 	return dict;
 }
@@ -283,7 +291,8 @@ function retrieveDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
 
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/retrieve', true);
+		var getString = "table_name=" + TABLE_NAME;
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
@@ -314,54 +323,45 @@ function retrieveDB(tableID, button){
 
 function addToDB(tableID, button){
 	try{
-		var req = new XMLHttpRequest();	
-
+		var req = new XMLHttpRequest();
+		console.log("addToDB called");
 		// Get data in the form
-		var name = document.getElementById("addForm").elements["name"].value;
-		var reps = document.getElementById("addForm").elements["reps"].value;
-		var weight = document.getElementById("addForm").elements["weight"].value;
-		var date = document.getElementById("addForm").elements["date"].value;
-		var unit = document.getElementById("addForm").elements["unit"];
+		var first_name = document.getElementById("add_customer").elements["first_name"].value;
+		var last_name = document.getElementById("add_customer").elements["last_name"].value;
+		var tp_num = document.getElementById("add_customer").elements["phone_number"].value;
 
-		// If lbs is checked, set unit to 0, else kg == 1
-		if(unit[0].checked){
-			unit = 0;
-		}
-		else{
-			unit = 1;
-		}
-		if(name != ""){
-			console.log("name: " + name);
-			var getString = "name=" + name + "&reps=" + reps + "&weight=" + weight +
-							"&date=" + date + "&unit=" + unit;
+		if(first_name != ""){
+			var getString = "table_name=" + TABLE_NAME + "&first_name=" + first_name + "&last_name=" + last_name + "&tp_num=" + tp_num;
 
-			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/insert?' + getString, true);
+			console.log(getString);
 
-			req.addEventListener('load', function(){			
-				// Request was okay
-				if (req.status > 199 && req.status < 400){
-					// Parse data and put in array
-					if(req.response != null){
-						var response = req.response;
+			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
+
+			req.addEventListener('load', function(){
+					// Request was okay
+					if (req.status > 199 && req.status < 400){
+						// Parse data and put in array
+						if(req.response != null){
+							var response = req.response;
+						}
+						var data = parseData(response);
+
+						buildTable(tableID, data);
 					}
-					var data = parseData(response);
-
-					buildTable(tableID, data);
-				}
-				else{
-					// Something went wrong
-					console.log("Error in GET request: " + req.statusText)
-				}
+					else{
+						// Something went wrong
+						console.log("Error in GET request: " + req.statusText)
+					}
 			});
 
 			// Send request
 			req.send(null);
-		}
-		else{
-			alert("Name must be a value. Exercise not added to Database.");
-		}
+			}
+			else{
+				alert("Name must be a value. Customer not added to Database.");
+			}
 
-	}
+		}
 	catch(e){
 		alert(e);
 	}
@@ -373,6 +373,7 @@ function buildTable(tableID, data){
 	var tBody = document.getElementById("dataTable").tBodies[0];
 
 	// ["customer_fname", "customer_lname", "telephone"];
+	// This needs to get data from the DB right? To build it properly?
 	var dict = {"customer_id":1, "customer_fname":"Glenn", "customer_lname":"OOOOOBERlanderrrrr", "telephone":"555-555-5555"};
 	var data = [dict];
 
@@ -436,5 +437,82 @@ function buildTable(tableID, data){
 				document.getElementById(id).value = data[i][key];
 			}
 		}
+	}
+}
+
+function search(tableID, button){
+	try{
+		var req = new XMLHttpRequest();
+
+		var payload = {"table_name": "customer"};
+
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/search', true);
+		req.setRequestHeader('Content-Type', 'application/json');
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+				var data = parseData(response);
+
+				// Get the search term that the user is searching for
+				var searchQuery = document.getElementsByName("search_query")[0].value;
+
+				// Trim any white spaces from the head or tail of the search query
+				searchQuery = searchQuery.trim();
+
+				// Need to store the indeces from data[] to keep after we search data for valid matches
+				var iToKeep = [];
+
+				// Go through the data returned in the table (should be all the table data)
+				for(var i = 0; i < data.length; i++){
+					// Set found flag to 0. I.e., assume we won't find the searchQuery
+					var foundFlag = 0;
+
+					// Each ith element of data[] will be a row in the table. Go through each row
+					//	and search for searchQuery
+					for(key in data[i]){
+						// If the searchQuery is not in any of the data returned from the 
+						//	table (i.e., it wasn't searched for), delete it from the dictionary
+						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+							foundFlag = 1;
+						}
+					}
+					if(foundFlag){
+						iToKeep.push(i);
+					}
+				}
+
+				// Add the items we want to keep to a new array
+				var filteredData = [];
+
+				for(var i = 0; i < iToKeep.length; i++){
+					indexToKeep = iToKeep[i];
+					filteredData.push(data[indexToKeep]);
+				}
+
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table with filtered search data
+				buildTable(tableID, filteredData);
+
+			}
+			else{
+				// Something went wrong
+				console.log("Error in POST request: " + req.statusText)
+			}
+		});
+
+		var jsonPayload = JSON.stringify(payload);
+
+		// Send request
+		req.send(jsonPayload);
+	}
+	catch(e){
+		alert(e);
 	}
 }

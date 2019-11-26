@@ -260,25 +260,25 @@ function parseData(response){
 	dict = dict.results;
 
 	
-	for(var i = 0; i < dict.length; i++){
-		// Split the date to get rid of trailing "T" values
-		if(dict[i]['date']){
-			var date = dict[i]['date'].split("T")[0];
-		}
-		dict[i]['date'] = date;
+	// for(var i = 0; i < dict.length; i++){
+	// 	// Split the date to get rid of trailing "T" values
+	// 	if(dict[i]['date']){
+	// 		var date = dict[i]['date'].split("T")[0];
+	// 	}
+	// 	dict[i]['date'] = date;
 
-		// Change unit to 'lbs' or 'kgs'
-		if(dict[i]['unit'] == 0){
-			dict[i]['unit'] = 'lbs';
-		}
-		else{
-			dict[i]['unit'] = 'kg';
-		}
-	}
+	// 	// Change unit to 'lbs' or 'kgs'
+	// 	if(dict[i]['unit'] == 0){
+	// 		dict[i]['unit'] = 'lbs';
+	// 	}
+	// 	else{
+	// 		dict[i]['unit'] = 'kg';
+	// 	}
+	// }
 
 	return dict;
 }
-
+/* Gets the current data from the DB to be displayed */
 function retrieveDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
@@ -312,17 +312,19 @@ function retrieveDB(tableID, button){
 	}
 }
 
+/* Gets the current data from the DB to be displayed */
 function addToDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
 
 		// Get data in the form
-		var name = document.getElementById("addForm").elements["name"].value;
-		var reps = document.getElementById("addForm").elements["reps"].value;
-		var weight = document.getElementById("addForm").elements["weight"].value;
-		var date = document.getElementById("addForm").elements["date"].value;
-		var unit = document.getElementById("addForm").elements["unit"];
-
+		var store_name = document.getElementById("add_shop").elements["store_name"].value;
+		var address = document.getElementById("add_shop").elements["address"].value;
+		var city = document.getElementById("add_shop").elements["city"].value;
+		var state = document.getElementById("add_shop").elements["state"].value;
+		var zip = document.getElementById("add_shop").elements["zip"].value;
+		var phone_number = document.getElementById("add_shop").elements["phone_number"].value;
+		var annual_sales = document.getElementById("add_shop").elements["sales"].value;
 		// If lbs is checked, set unit to 0, else kg == 1
 		if(unit[0].checked){
 			unit = 0;
@@ -331,9 +333,10 @@ function addToDB(tableID, button){
 			unit = 1;
 		}
 		if(name != ""){
-			console.log("name: " + name);
-			var getString = "name=" + name + "&reps=" + reps + "&weight=" + weight +
-							"&date=" + date + "&unit=" + unit;
+			// store_name, address, city, state, zip
+			console.log("name: " + store_name);
+			var getString = "store_name=" + store_name + "&address=" + address + "&city=" + city +
+							"&state=" + state + "&zip=" + zip + "&telephone_number=" + phone_number + "&annual_sales=" + annual_sales;
 
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/insert?' + getString, true);
 
@@ -437,5 +440,82 @@ function buildTable(tableID, data){
 				document.getElementById(id).value = data[i][key];
 			}
 		}
+	}
+}
+
+function search(tableID, button){
+	try{
+		var req = new XMLHttpRequest();
+
+		var payload = {"table_name": "record_shop"};
+
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/search', true);
+		req.setRequestHeader('Content-Type', 'application/json');
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+				var data = parseData(response);
+
+				// Get the search term that the user is searching for
+				var searchQuery = document.getElementsByName("search_query")[0].value;
+
+				// Trim any white spaces from the head or tail of the search query
+				searchQuery = searchQuery.trim();
+
+				// Need to store the indeces from data[] to keep after we search data for valid matches
+				var iToKeep = [];
+
+				// Go through the data returned in the table (should be all the table data)
+				for(var i = 0; i < data.length; i++){
+					// Set found flag to 0. I.e., assume we won't find the searchQuery
+					var foundFlag = 0;
+
+					// Each ith element of data[] will be a row in the table. Go through each row
+					//	and search for searchQuery
+					for(key in data[i]){
+						// If the searchQuery is not in any of the data returned from the 
+						//	table (i.e., it wasn't searched for), delete it from the dictionary
+						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+							foundFlag = 1;
+						}
+					}
+					if(foundFlag){
+						iToKeep.push(i);
+					}
+				}
+
+				// Add the items we want to keep to a new array
+				var filteredData = [];
+
+				for(var i = 0; i < iToKeep.length; i++){
+					indexToKeep = iToKeep[i];
+					filteredData.push(data[indexToKeep]);
+				}
+
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table with filtered search data
+				buildTable(tableID, filteredData);
+
+			}
+			else{
+				// Something went wrong
+				console.log("Error in POST request: " + req.statusText)
+			}
+		});
+
+		var jsonPayload = JSON.stringify(payload);
+
+		// Send request
+		req.send(jsonPayload);
+	}
+	catch(e){
+		alert(e);
 	}
 }

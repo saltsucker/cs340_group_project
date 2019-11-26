@@ -15,7 +15,7 @@ app.use(express.static('public'));
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-app.set('port', 50262);
+app.set('port', 58376);
 
 app.use(function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -131,6 +131,9 @@ app.get('/insert', function(req, res, next){
 	else if(req.query.table_name == "order_album"){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
 	}
+	else {
+		var tableQuery = insertShopQuery(req);
+	}
 	
 	// Insert row into table
 	mysql.pool.query(tableQuery, list, function(err, result){
@@ -178,10 +181,19 @@ function insertOrderQuery(req){
 
 	var orderQuery = 'INSERT INTO `order` (order_qty, total_sale, date_sold, customer_id, shop_id) ' +
 				'VALUES (' + req.query.order_qty + ',' + req.query.total_sale + ',' + req.query.date_sold + ',' + 
-				customerQuery + ', ' + shop_id + '); \n';
+				customerQuery + ',' + shop_id + '); \n';
 
 		
 	return orderQuery;
+}
+
+/***********************
+ * Sets up a query for insertion for record shop
+ ***********************/
+function insertShopQuery(req) {
+	//name address city state zip telephone_number annual_sales
+	var shopQuery = "INSERT INTO record_shop(name, address, city, state, zip, telephone_number, annual_sales) VALUES ('"+name+"', '"+address+"', '"+city+"', '"+state+"', '"+zip+"', '"+telephone_number+"', '"+annual_sales+"')"
+	return shopQuery
 }
 
 /**********************
