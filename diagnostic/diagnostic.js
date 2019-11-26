@@ -107,6 +107,7 @@ app.post('/search',function(req,res,next){
 });
 
 /* INSERT QUERY INTO DB */
+// this is not done yet
 app.get('/insert', function(req, res, next){
 	var context = {};
 	var list;
@@ -222,7 +223,7 @@ function insertShopQuery(req) {
 
 app.post('/edit', function(req, res, next){
 	var context = {};
-	var list = [req.body['name'], req.body['reps'], req.body['weight'], req.body['date'], req.body['unit'], req.body['id']];
+	//var list = [req.body['name'], req.body['reps'], req.body['weight'], req.body['date'], req.body['unit'], req.body['id']];
 
 	var queryList = [];
 	var table_name = req.body['table_name'];
@@ -235,6 +236,17 @@ app.post('/edit', function(req, res, next){
 	if(req.body['table_name'] == "album"){
 		queryList = [req.body['artist_name'], req.body['album_name'], req.body['genre'], req.body['inventory'], req.body['wholesale_cost'], req.body['retail_cost'], req.body['id']];
 		queryString = "UPDATE " + table_name + " SET artist_name=?, album_name=?, genre=?, inventory=?, wholesale_cost=?, retail_cost=?" +
+						" WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+	}
+	else if(table_name == "customer") {
+		queryList = [req.body['f_name'], req.body['l_name'], req.body['tp_num'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET f_name=?, l_name=?, tp_num=?" + " WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
+	}
+	else if(table_name == "record_shop") {
+		queryList = [req.body['name'], req.body['address'], req.body['city'], req.body['state'], req.body['zip'], req.body['phone_number'], req.body['annual_sales'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, phone_number=?, annual_sales=?" +
 						" WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
 	}
@@ -277,6 +289,15 @@ app.post('/delete', function(req, res){
 	else if(table_name == "album"){
 		returnQuery = "SELECT * FROM album";
 	}
+	else if(table_name == "customer"){
+		returnQuery = "SELECT * FROM customer";
+	}
+	else if(table_name == "record_shop"){
+		returnQuery = "SELECT * FROM record_shop"
+	}
+	else {
+		console.log("Can't delete row");
+	}
 	// Deleting row from table
 	mysql.pool.query("DELETE FROM `" + table_name + "` WHERE " + id_name + "=?", id_to_del, function(err, result){
 		if(err){
@@ -301,8 +322,6 @@ app.post('/delete', function(req, res){
  ************************************/
  function getOrderDelQuery(album_name){
  	var delString;
-
-
 	return delString;
  }
 
@@ -323,7 +342,7 @@ function getOrderTable(){
 	return query;
 }
 
-
+// DO WE NEED THIS?
 app.get('/reset-table',function(req,res,next){
 	var context = {};
 	mysql.pool.query("DROP TABLE IF EXISTS workouts", function(err){ //replace your connection pool with the your variable containing the connection pool

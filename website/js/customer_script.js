@@ -208,9 +208,9 @@ function stopEditRow(tableID, button){
 		var tp_num = textFields[2].value;
 		var id = currentRow.getAttribute("id");
 
-		var payload = {"id" : id, "fname": f_name, "l_name": l_name, "tp_num": tp_num, "table_name":TABLE_NAME, "id_name": ID_NAME};
+		var payload = {"id" : id, "f_name": f_name, "l_name": l_name, "tp_num": tp_num, "table_name":TABLE_NAME, "id_name": ID_NAME};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/edit', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
