@@ -1,13 +1,17 @@
 /***************
 * Global Vars  *
 ***************/
-var HEADER_NAMES = ["order_id", "f_name", "l_name", "customer_id", "album_name", "order_qty", "date_sold", "total_sale"];
+var HEADER_NAMES = ["order_id", "f_name", "l_name", "artist_name", "album_name", "order_qty", "date_sold", "total_sale"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "order";
 var ID_NAME = "order_id";
+<<<<<<< HEAD
 var SQLPORT = "58376"
+=======
+var SQLPORT = "50263"
+>>>>>>> 6eb602c64847dcc2973de72ed5dab3de0f8bf41f
 
 // Populate customer list
 populateCustomerList();
@@ -117,14 +121,28 @@ function deleteRow(tableID, button){
 			});
 
 			/*************INFORMATION FOR POST****************/
-			// Get the first child/column of the row. This will be the order_id
-			order_id = currentRow.cells[0].firstChild.value;
+			// Get cells in the row
+			var textFields = currentRow.getElementsByTagName("input");
 
-			var payload = {table_name: TABLE_NAME,
-							id: order_id};
+			// Go through the cells and match whatever attributes we need and set variables
+			for(var i = 0; i < textFields.length; i++){
+				// Make a string out of the cell name
+				var testString = String(textFields[i].getAttribute("id"));
 
-			// console.log(currentRow)
-			// console.log(payload);
+				// If the name has "id" in it, we don't want to make it editable
+				if(testString.indexOf("order_id") > -1){
+					order_id = textFields[i].value;
+				}
+				else if(testString.indexOf("album_name") > -1){
+					album_name = textFields[i].value;
+				}
+			}
+
+			var payload = {"table_name": TABLE_NAME,
+							"id": order_id,
+							"id_name": ID_NAME,
+							"album_name": album_name};
+
 			jsonPayload = JSON.stringify(payload);
 
 			// Send request
@@ -161,9 +179,16 @@ function editRow(tableID, button){
 			button.innerHTML = "Submit";
 		}
 
+		// Make the cells in the table editable so user can put in data
 		for(var i = 0; i < textFields.length; i++){
-			textFields[i].readOnly = false;
-			textFields[i].className = "editRow";
+			// Make a string out of the cell name
+			var testString = String(textFields[i].getAttribute("id"));
+
+			// If the name has "id" in it, we don't want to make it editable
+			if(testString.indexOf("id") == -1){
+				textFields[i].readOnly = false;
+				textFields[i].className = "editRow";
+			}
 		}
 		
 	}
@@ -308,24 +333,7 @@ function retrieveDB(tableID, button){
 function addToDB(tableID, button){
 	try{
 
-		// TESTING FETCH
-		// async function getCustomers(){
-		// 	var getString = "table_name=" + "customer";
-		// 	var url = 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString;
-		// 	let response = await fetch(url);
-		// 	return await response.json();
-		// }
-	
-		// var customerData = getCustomers().then(function(data){
-		// 	console.log(data);
-		// 	return data;
-		// });
-		// END TESTING
-
-
 		var req = new XMLHttpRequest();
-
-		//["order_id", "customer_fname", "customer_lname", "customer_id", "album_name", "total_items", "date_sold", "total_amount"];
 
 		// Get album names and split if there are multiple ones
 		var album_name_string = document.getElementById("add_order").elements["album_names"].value;
