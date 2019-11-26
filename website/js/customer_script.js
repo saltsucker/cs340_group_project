@@ -5,7 +5,7 @@ var HEADER_NAMES = ["customer_id", "customer_fname", "customer_lname", "telephon
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
-var SQLPORT = "50262"
+var SQLPORT = "50263"
 
 /***************
 * Create Table *

@@ -6,7 +6,8 @@ var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "album";
-var SQLPORT = "50262"
+var SQLPORT = "50263"
+var ID_NAME = "album_id";
 
 /***************
 * Create Table *
@@ -59,15 +60,10 @@ for(i = 0; i < headers.length; i++){
 	else{
 		headers[i].textContent = HEADER_NAMES[i];
 	}
-
-
-// TEMPORRARY, DELETE TO FILL IN ACTUAL DATA
-//var data = {};
-//buildTable(0, data);
 }
 
 function deleteRow(tableID, button){
-	try{
+		try{
 		// Get current row
 		var table = document.getElementById(tableID);
 		var rowCount = table.rows.length;
@@ -89,7 +85,7 @@ function deleteRow(tableID, button){
 			// Setup POST request
 			var req = new XMLHttpRequest();
 
-			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT+ '/delete', true);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
 
 			req.addEventListener('load', function(){			
@@ -101,23 +97,11 @@ function deleteRow(tableID, button){
 					}
 					var data = parseData(response);
 
-					var table = document.getElementById(tableID);
-					var rowCount = table.rows.length;
-					var currentRow = button.parentElement.parentElement;
+					// Delete table because we're going to rebuild it with new data
+					deleteTable(tableID);
 
-					for(var i = 0; i < rowCount; i++){
-						var row = table.rows[i];
-
-						if(row == currentRow){
-							if(rowCount < 3){
-								alert("Cannot delete all the rows.");
-								break;
-							}
-							table.deleteRow(i);
-							rowCount--;
-							i--;
-						}
-					}
+					// Build table back up with new data
+					buildTable(tableID, data);
 				}
 				else{
 					// Something went wrong
@@ -126,7 +110,15 @@ function deleteRow(tableID, button){
 			});
 
 			/*************INFORMATION FOR POST****************/
-			var payload = {id : currentRow.getAttribute("id")};
+			// Get the first child/column of the row. This will be the order_id
+			order_id = currentRow.cells[0].firstChild.value;
+
+			var payload = {table_name: TABLE_NAME,
+							id: order_id,
+							id_name: ID_NAME};
+
+			// console.log(currentRow)
+			// console.log(payload);
 			jsonPayload = JSON.stringify(payload);
 
 			// Send request
@@ -158,14 +150,21 @@ function editRow(tableID, button){
 			return;
 		}
 		else{
-			// Change button look
-			button.className = "editButton";
+			// Change button to look cool and gray
+			button.className = "editButton";	// Changes button look to be gray
 			button.innerHTML = "Submit";
 		}
 
+		// Make the cells in the table editable so user can put in data
 		for(var i = 0; i < textFields.length; i++){
-			textFields[i].readOnly = false;
-			textFields[i].className = "editRow";
+			// Make a string out of the cell name
+			var testString = String(textFields[i].getAttribute("id"));
+
+			// If the name has "id" in it, we don't want to make it editable
+			if(testString.indexOf("id") == -1){
+				textFields[i].readOnly = false;
+				textFields[i].className = "editRow";
+			}
 		}
 		
 	}
@@ -173,6 +172,12 @@ function editRow(tableID, button){
 		alert(e);
 	}
 }
+
+/***********************
+* This function actually submits 
+* the edited cells to the server
+* and catches the returned information.
+************************/
 
 function stopEditRow(tableID, button){
 	try{
@@ -199,22 +204,17 @@ function stopEditRow(tableID, button){
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
 
-		var name = textFields[0].value;
-		var reps = textFields[1].value;
-		var weight = textFields[2].value;
-		var date = textFields[3].value;
-		var unit = textFields[4].value;
+		var artist_name = textFields[1].value;
+		var album_name = textFields[2].value;
+		var genre = textFields[3].value;
+		var inventory = textFields[4].value;
+		var wholesale_cost = textFields[5].value;
+		var retail_cost = textFields[6].value;
 		var id = currentRow.getAttribute("id");
 
-		// Check if user entered in kgs or lbs
-		if(unit == 'lbs' || unit == 'lb' || unit == 'pound' || unit == 'pounds' || unit == 0){
-			unit = 0;
-		}
-		else if(unit == 'kgs' || unit == 'kg' || unit == 'kilograms' || unit == 1){
-			unit = 1;
-		}
-
-		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
+		var payload = {"id": id, "artist_name": artist_name, "album_name": album_name, "genre": genre, 
+						"inventory": inventory, "wholesale_cost": wholesale_cost, "retail_cost": retail_cost,
+						"table_name": TABLE_NAME, "id_name": ID_NAME};
 
 		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
@@ -228,10 +228,12 @@ function stopEditRow(tableID, button){
 				}
 				var data = parseData(response);
 
+				console.log(data);
+
 				// Add text back into the row with information sent back from the server
 				for(key in data[0]){
 				 	if(key){
-						var id = key + "_" + data[0]['id'];
+						var id = key + "_" + data[0][ID_NAME];
 						document.getElementById(id).value = data[0][key];
 					}
 				}
@@ -440,11 +442,6 @@ function buildTable(tableID, data){
 	//var tBody = document.getElementById(tableID).tBodies[0];
 	var tBody = document.getElementById("dataTable").tBodies[0];
 
-	// ["album_id", "artist_name", "album_name", "genre", "quantity_on_hand", "wholesale_cost", "customer_cost"];
-	//var dict = {"album_id":1, "artist_name":"Green Day", "album_name": "Dookie", "genre":"Rock", "quantity_on_hand":100,
-	//			"wholesale_cost":"6.99", "customer_cost":"9.99"};
-	//var data = [dict];
-
 	for(var i = 0; i < data.length; i++){
 		// Create rows
 		var row = document.createElement("tr");
@@ -459,7 +456,7 @@ function buildTable(tableID, data){
 				var hiddenField = document.createElement("input");
 				hiddenField.setAttribute("type", "hidden");
 				// hiddenField.setAttribute("name", "id");
-				hiddenField.setAttribute("id", "id_" + data[i]['album_id']);
+				hiddenField.setAttribute("id", "id_" + data[i][ID_NAME]);
 				col.appendChild(hiddenField);
 			}
 			else{
@@ -467,7 +464,7 @@ function buildTable(tableID, data){
 				if(j < COLUMNS-2){
 					// Add text field
 					var textField = document.createElement("input");
-					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i]['album_id']);
+					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
 					textField.readOnly = true;
 					col.appendChild(textField);
 				}
@@ -492,7 +489,7 @@ function buildTable(tableID, data){
 
 			// Add column to row
 			row.appendChild(col);
-			row.setAttribute("id", data[i]['album_id']);
+			row.setAttribute("id", data[i][ID_NAME]);
 		}
 
 		// Add row to table
@@ -504,7 +501,7 @@ function buildTable(tableID, data){
 			// 	var id = key + "_" + data[i]['album_id'];
 			// 	document.getElementById(id).value = data[i][key];
 			// }
-			document.getElementById(key + "_" + data[i]['album_id']).value = data[i][key];
+			document.getElementById(key + "_" + data[i][ID_NAME]).value = data[i][key];
 		}
 	}
 }
