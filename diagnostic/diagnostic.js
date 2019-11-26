@@ -15,7 +15,7 @@ app.use(express.static('public'));
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-app.set('port', 50262);
+app.set('port', 50263);
 
 app.use(function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -37,8 +37,8 @@ app.get('/retrieve',function(req,res,next){
 		// Retrieve the table with the given table_name
 		
 		mysql.pool.query('SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
-						'`order`.date_sold, `order`.customer_id, customer.f_name, customer.l_name, ' +
-						'album.album_name ' +
+						'`order`.date_sold, customer.f_name, customer.l_name, ' +
+						'album.album_name, album.artist_name ' +
 						'FROM (customer INNER JOIN `order` ON `order`.customer_id = customer.customer_id INNER JOIN ' + 
 						'order_album ON order_album.order_id = `order`.order_id INNER JOIN ' + 
 						'album ON album.album_id = order_album.album_id) ORDER BY `order`.order_id ASC', function(err, rows, fields){
@@ -94,23 +94,6 @@ app.post('/search',function(req,res,next){
 	});
 	
 });
-
-/*************************************
- * This function returns the order table query. This
- * query is long and I need it in a few places
- *************************************/
-function getOrderTable(){
-	var query;
-
-	query =	'SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
-				'`order`.date_sold, `order`.customer_id, customer.f_name, customer.l_name, ' +
-				'album.album_name ' +
-				'FROM (customer INNER JOIN `order` ON `order`.customer_id = customer.customer_id INNER JOIN ' + 
-				'order_album ON order_album.order_id = `order`.order_id INNER JOIN ' + 
-				'album ON album.album_id = order_album.album_id) ORDER BY `order`.order_id ASC';
-
-	return query;
-}
 
 app.get('/insert', function(req, res, next){
 	var context = {};
@@ -213,15 +196,32 @@ app.post('/edit', function(req, res, next){
 	var context = {};
 	var list = [req.body['name'], req.body['reps'], req.body['weight'], req.body['date'], req.body['unit'], req.body['id']];
 
+	var queryList = [];
+	var table_name = req.body['table_name'];
+	var id_name = req.body['id_name'];
+	
+	// Do the query for album. Define:
+	// 	queryList (the variables you'll be updating)
+	// 	queryString (the actual query to the database)
+	// 	returnQuery (what you want to be returned back to the front end html site)
+	if(req.body['table_name'] == "album"){
+		queryList = [req.body['artist_name'], req.body['album_name'], req.body['genre'], req.body['inventory'], req.body['wholesale_cost'], req.body['retail_cost'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET artist_name=?, album_name=?, genre=?, inventory=?, wholesale_cost=?, retail_cost=?" +
+						" WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+	}
+
+	mysql.pool.query(queryString, queryList, function(err, result){
+
 	// Insert row into table
-	mysql.pool.query("UPDATE workouts SET name=?, reps=?, weight=?, date=?, unit=? WHERE id=?", list, function(err, result){
 		if(err){
 			next(err);
 			return;
 		}
 
-		// Return data from the table in the database
-		mysql.pool.query('SELECT * FROM workouts WHERE id=?', req.body['id'], function(err, rows, fields){
+		// Return the row from the table in the database that we edited
+		mysql.pool.query(returnQuery, req.body['id'], function(err, rows, fields){
+
 			if(err){
 				next(err);
 				return;
@@ -235,50 +235,66 @@ app.post('/edit', function(req, res, next){
 app.post('/delete', function(req, res){
 	var context = {};
 	var table_name = req.body['table_name'];
+	var id_name = req.body['id_name']; 		// Each table has its own unique id right? Order's is called order_id, Album's is album_id. We define the name here.
+	var id_to_del = req.body['id'];			// We are passing in the id of the row we want to delete from the table.
+	var returnQuery;
+	var delQuery;							// May not need this. I need it for Order
 
+	// Defining the query that we want to send back after we delete from the table
 	if(table_name == "order"){
+		console.log(req.body);
+		delQuery = getOrderDelQuery(req.body['album_name']);
+		returnQuery = getOrderTable(); // This is along query. It uses JOINS so I made it a function
+	}
+	else if(table_name == "album"){
+		returnQuery = "SELECT * FROM album";
 	}
 	// Deleting row from table
-	mysql.pool.query("DELETE FROM `" + table_name + "` WHERE order_id=?", req.body['id'], function(err, result){
+	mysql.pool.query("DELETE FROM `" + table_name + "` WHERE " + id_name + "=?", id_to_del, function(err, result){
 		if(err){
 			next(err);
 			return;
 		}
 
-		// Return data from whatever table we're looking at in the database
-		if(table_name == "order"){
-			mysql.pool.query(getOrderTable(), function(err, rows, fields){
+		mysql.pool.query(returnQuery, function(err, rows, fields){
 				if(err){
 					next(err);
 					return;
 				}
 				context.results = rows;
 				res.send(context);
-			});
-		}
-		else{
-		  	// Return data from the table in the database	
-			mysql.pool.query(tableQuery, list, function(err, result){
-				if(err){
-					next(err);
-					return;
-				}
-			
-			//	else{
-			//		var insertId = result.insertId;
-			//		mysql.pool.query('SELECT * FROM album WHERE album_id=?', [insertId], function(err, rows, fields){
-			//			if(err){
-			//				next(err);
-			//				return;
-			//			}
-			//			context.results = rows;
-			//			res.send(context);
-			//		});
-			//	}
-			});
-		};
+		});
 	});
 });
+
+/************************************
+ * This function returns a delete query from
+ * the Order table where album_name = the parameter we're passing in
+ ************************************/
+ function getOrderDelQuery(album_name){
+ 	var delString;
+
+
+	return delString;
+ }
+
+/*************************************
+ * This function returns the order table query. This
+ * query is long and I need it in a few places
+ *************************************/
+function getOrderTable(){
+	var query;
+
+	query =	'SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
+				'`order`.date_sold, `order`.customer_id, customer.f_name, customer.l_name, ' +
+				'album.album_name, album.artist_name ' +
+				'FROM (customer INNER JOIN `order` ON `order`.customer_id = customer.customer_id INNER JOIN ' + 
+				'order_album ON order_album.order_id = `order`.order_id INNER JOIN ' + 
+				'album ON album.album_id = order_album.album_id) ORDER BY `order`.order_id ASC';
+
+	return query;
+}
+
 
 app.get('/reset-table',function(req,res,next){
 	var context = {};
