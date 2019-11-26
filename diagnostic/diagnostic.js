@@ -74,6 +74,7 @@ app.get('/retrieve',function(req,res,next){
 	}	
 });
 
+/* SELECT VALUE FROM TABLE */
 app.post('/search',function(req,res,next){
 	var context = {};
 	
@@ -82,6 +83,12 @@ app.post('/search',function(req,res,next){
 	}
 	else if(req.body['table_name'] == "order"){
 		var tableQuery = getOrderTable();	
+	}
+	else if(req.body['table_name'] == "customer") {
+		var tableQuery = "SELECT * FROM customer"
+	}
+	else {
+		var tableQuery = "SELECT * FROM record_shop"
 	}
 
 	mysql.pool.query(tableQuery, function(err, rows, fields){
@@ -114,6 +121,7 @@ app.get('/insert', function(req, res, next){
 	else if(req.query.table_name == "order_album"){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
 	}
+	// my other statements for inserting customer are on OSU server... so annoying.
 	else {
 		var tableQuery = insertShopQuery(req);
 	}
@@ -169,6 +177,9 @@ function insertOrderQuery(req){
 		
 	return orderQuery;
 }
+
+// INSERTCUSTOMERQUERY IN OSU DIAGNOSTIC.JS FILE
+
 
 /***********************
  * Sets up a query for insertion for record shop

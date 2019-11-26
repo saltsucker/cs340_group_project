@@ -60,11 +60,6 @@ for(i = 0; i < headers.length; i++){
 	else{
 		headers[i].textContent = HEADER_NAMES[i];
 	}
-
-
-// TEMPORRARY, DELETE TO FILL IN ACTUAL DATA
-var data = {};
-buildTable(0, data);
 }
 
 function deleteRow(tableID, button){
@@ -90,9 +85,7 @@ function deleteRow(tableID, button){
 			// Setup POST request
 			var req = new XMLHttpRequest();
 
-			// get the customer id of the row
-
-			req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/delete', true);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/delete', true);
 			req.setRequestHeader('Content-Type', 'application/json');
 
 			req.addEventListener('load', function(){			
@@ -104,36 +97,31 @@ function deleteRow(tableID, button){
 					}
 					var data = parseData(response);
 
-					var table = document.getElementById(tableID);
-					var rowCount = table.rows.length;
-					var currentRow = button.parentElement.parentElement;
+					// Delete table because we're going to rebuild it with new data
+					deleteTable(tableID);
 
-					for(var i = 0; i < rowCount; i++){
-						var row = table.rows[i];
-
-						if(row == currentRow){
-							if(rowCount < 3){
-								alert("Cannot delete all the rows.");
-								break;
-							}
-							table.deleteRow(i);
-							rowCount--;
-							i--;
-						}
-					}
+					// Build table back up with new data
+					buildTable(tableID, data);
 				}
 				else{
 					// Something went wrong
-					console.log("Error in GET delete request: " + req.statusText)
+					console.log("Error in POST delete request: " + req.statusText)
 				}
 			});
 
 			/*************INFORMATION FOR POST****************/
-			var payload = {id : currentRow.getAttribute("customer_id")};
+			// Get the first child/column of the row. This will be the order_id
+			order_id = currentRow.cells[0].firstChild.value;
+
+			var payload = {table_name: TABLE_NAME,
+							id: order_id,
+							id_name: ID_NAME};
+
+			// console.log(currentRow)
+			// console.log(payload);
 			jsonPayload = JSON.stringify(payload);
-			console.log(payload);
+
 			// Send request
-			console.log("Row id to be deleted: " + jsonPayload)
 			req.send(jsonPayload);
 		}
 		else{
@@ -168,8 +156,14 @@ function editRow(tableID, button){
 		}
 
 		for(var i = 0; i < textFields.length; i++){
-			textFields[i].readOnly = false;
-			textFields[i].className = "editRow";
+			// Make a string out of the cell name
+			var testString = String(textFields[i].getAttribute("id"));
+
+			// If the name has "id" in it, we don't want to make it editable
+			if(testString.indexOf("id") == -1){
+				textFields[i].readOnly = false;
+				textFields[i].className = "editRow";
+			}
 		}
 		
 	}
@@ -178,13 +172,18 @@ function editRow(tableID, button){
 	}
 }
 
+
+/***********************
+* This function actually submits 
+* the edited cells to the server
+* and catches the returned information.
+************************/
 function stopEditRow(tableID, button){
 	try{
 		var req = new XMLHttpRequest();
 
 		// Do stuff with the table
 		var table = document.getElementById(tableID);
-		
 		var rowCount = table.rows.length;
 		var currentRow = button.parentElement.parentElement;
 
@@ -203,23 +202,13 @@ function stopEditRow(tableID, button){
 
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
-
-		var name = textFields[0].value;
-		var reps = textFields[1].value;
-		var weight = textFields[2].value;
-		var date = textFields[3].value;
-		var unit = textFields[4].value;
+		// first_name, last_name, tp_num
+		var f_name = textFields[0].value;
+		var l_name = textFields[1].value;
+		var tp_num = textFields[2].value;
 		var id = currentRow.getAttribute("id");
 
-		// Check if user entered in kgs or lbs
-		if(unit == 'lbs' || unit == 'lb' || unit == 'pound' || unit == 'pounds' || unit == 0){
-			unit = 0;
-		}
-		else if(unit == 'kgs' || unit == 'kg' || unit == 'kilograms' || unit == 1){
-			unit = 1;
-		}
-
-		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
+		var payload = {"id" : id, "fname": f_name, "l_name": l_name, "tp_num": tp_num, "table_name":TABLE_NAME, "id_name": ID_NAME};
 
 		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
@@ -236,7 +225,7 @@ function stopEditRow(tableID, button){
 				// Add text back into the row with information sent back from the server
 				for(key in data[0]){
 				 	if(key){
-						var id = key + "_" + data[0]['id'];
+						var id = key + "_" + data[0][ID_NAME];
 						document.getElementById(id).value = data[0][key];
 					}
 				}
@@ -322,7 +311,6 @@ function retrieveDB(tableID, button){
 function addToDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();
-		console.log("addToDB called");
 		// Get data in the form
 		var first_name = document.getElementById("add_customer").elements["first_name"].value;
 		var last_name = document.getElementById("add_customer").elements["last_name"].value;
@@ -330,8 +318,6 @@ function addToDB(tableID, button){
 
 		if(first_name != ""){
 			var getString = "table_name=" + TABLE_NAME + "&first_name=" + first_name + "&last_name=" + last_name + "&tp_num=" + tp_num;
-
-			console.log(getString);
 
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
 
@@ -366,14 +352,7 @@ function addToDB(tableID, button){
 }
 
 function buildTable(tableID, data){
-	// Get first table body in table
-	//var tBody = document.getElementById(tableID).tBodies[0];
 	var tBody = document.getElementById("dataTable").tBodies[0];
-
-	// ["customer_fname", "customer_lname", "telephone"];
-	// This needs to get data from the DB right? To build it properly?
-	var dict = {"customer_id":1, "customer_fname":"Glenn", "customer_lname":"OOOOOBERlanderrrrr", "telephone":"555-555-5555"};
-	var data = [dict];
 
 	for(var i = 0; i < data.length; i++){
 		// Create rows
@@ -389,7 +368,7 @@ function buildTable(tableID, data){
 				var hiddenField = document.createElement("input");
 				hiddenField.setAttribute("type", "hidden");
 				// hiddenField.setAttribute("name", "id");
-				hiddenField.setAttribute("id", "id_" + data[i]['id']);
+				hiddenField.setAttribute("id", "id_" + data[i][ID_NAME]);
 				col.appendChild(hiddenField);
 			}
 			else{
@@ -397,7 +376,7 @@ function buildTable(tableID, data){
 				if(j < COLUMNS-2){
 					// Add text field
 					var textField = document.createElement("input");
-					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i]['id']);
+					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
 					textField.readOnly = true;
 					col.appendChild(textField);
 				}
@@ -422,7 +401,7 @@ function buildTable(tableID, data){
 
 			// Add column to row
 			row.appendChild(col);
-			row.setAttribute("id", data[i]['id']);
+			row.setAttribute("id", data[i][ID_NAME]);
 		}
 
 		// Add row to table
@@ -430,10 +409,7 @@ function buildTable(tableID, data){
 
 		// Fill in text data
 		for(key in data[i]){
-		 	if(key){
-				var id = key + "_" + data[i]['id'];
-				document.getElementById(id).value = data[i][key];
-			}
+			document.getElementById(key + "_" + data[i][ID_NAME]).value = data[i][key];
 		}
 	}
 }

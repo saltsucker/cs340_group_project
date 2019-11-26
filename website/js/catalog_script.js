@@ -63,7 +63,7 @@ for(i = 0; i < headers.length; i++){
 }
 
 function deleteRow(tableID, button){
-		try{
+	try{
 		// Get current row
 		var table = document.getElementById(tableID);
 		var rowCount = table.rows.length;
@@ -105,7 +105,7 @@ function deleteRow(tableID, button){
 				}
 				else{
 					// Something went wrong
-					console.log("Error in GET delete request: " + req.statusText)
+					console.log("Error in POST delete request: " + req.statusText)
 				}
 			});
 
@@ -166,7 +166,6 @@ function editRow(tableID, button){
 				textFields[i].className = "editRow";
 			}
 		}
-		
 	}
 	catch(e){
 		alert(e);
@@ -178,7 +177,6 @@ function editRow(tableID, button){
 * the edited cells to the server
 * and catches the returned information.
 ************************/
-
 function stopEditRow(tableID, button){
 	try{
 		var req = new XMLHttpRequest();
@@ -328,7 +326,6 @@ function addToDB(tableID, button){
 							+ "&album_name=" + album_name + "&genre=" + genre 
 							+ "&inventory=" + inventory;
 
-console.log(getString);
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
 
 			req.addEventListener('load', function(){			
@@ -368,7 +365,7 @@ function search(tableID, button){
 
 		var payload = {"table_name": "album"};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+SQLPORT+'/search', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/search', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
