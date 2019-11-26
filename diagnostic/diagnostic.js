@@ -128,8 +128,11 @@ app.get('/insert', function(req, res, next){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
 	}
 	// my other statements for inserting customer are on OSU server... so annoying.
-	else {
+	else if(req.query.table_name == "record_shop") {
 		var tableQuery = insertShopQuery(req);
+	}
+	else {
+		console.log("Insert did not work");
 	}
 	
 	// Insert row into table
@@ -248,7 +251,10 @@ app.post('/edit', function(req, res, next){
 		queryList = [req.body['name'], req.body['address'], req.body['city'], req.body['state'], req.body['zip'], req.body['phone_number'], req.body['annual_sales'], req.body['id']];
 		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, phone_number=?, annual_sales=?" +
 						" WHERE " + id_name + "=?";
-		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
+	}
+	else {
+		console.log("Edit did not work");
 	}
 
 	mysql.pool.query(queryString, queryList, function(err, result){
@@ -293,7 +299,7 @@ app.post('/delete', function(req, res){
 		returnQuery = "SELECT * FROM customer";
 	}
 	else if(table_name == "record_shop"){
-		returnQuery = "SELECT * FROM record_shop"
+		returnQuery = "SELECT * FROM record_shop";
 	}
 	else {
 		console.log("Can't delete row");
