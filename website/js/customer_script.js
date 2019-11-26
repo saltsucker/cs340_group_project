@@ -254,23 +254,6 @@ function parseData(response){
 	var dict = JSON.parse(response);
 	dict = dict.results;
 
-	
-	/*for(var i = 0; i < dict.length; i++){
-		// Split the date to get rid of trailing "T" values
-		if(dict[i]['date']){
-			var date = dict[i]['date'].split("T")[0];
-		}
-		dict[i]['date'] = date;
-
-		// Change unit to 'lbs' or 'kgs'
-		if(dict[i]['unit'] == 0){
-			dict[i]['unit'] = 'lbs';
-		}
-		else{
-			dict[i]['unit'] = 'kg';
-		}
-	}*/
-
 	return dict;
 }
 

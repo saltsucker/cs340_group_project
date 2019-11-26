@@ -127,6 +127,9 @@ app.get('/insert', function(req, res, next){
 	else if(req.query.table_name == "order_album"){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
 	}
+        else if(req.query.table_name == "customer") {
+		var tableQuery = insertCustomerQuery(req);
+	}
 	// my other statements for inserting customer are on OSU server... so annoying.
 	else if(req.query.table_name == "record_shop") {
 		var tableQuery = insertShopQuery(req);
@@ -187,16 +190,23 @@ function insertOrderQuery(req){
 	return orderQuery;
 }
 
-// INSERTCUSTOMERQUERY IN OSU DIAGNOSTIC.JS FILE
+/*********************** 
+ *  * This function will insert a customer into order query
+ ************************/
+function insertCustomerQuery(req){
+	        var customerQuery = "INSERT INTO customer (f_name, l_name, telephone_number) VALUES ('"+req.query.first_name+"', '"+req.query.last_name+"', '"+req.query.tp_num+"')";
 
+		        return customerQuery;
+}
 
 /***********************
  * Sets up a query for insertion for record shop
  ***********************/
-function insertShopQuery(req) {
-	//name address city state zip telephone_number annual_sales
-	var shopQuery = "INSERT INTO record_shop(name, address, city, state, zip, telephone_number, annual_sales) VALUES ('"+name+"', '"+address+"', '"+city+"', '"+state+"', '"+zip+"', '"+telephone_number+"', '"+annual_sales+"')"
-	return shopQuery
+function insertShopQuery(req){
+	//store_name, address, city, state, zip 
+	var shopQuery = "INSERT INTO record_shop (name, address, city, state, zip, telephone_number, annual_sales)" 
+		+ "VALUES ('"+req.query.store_name+"', '"+req.query.address+"', '"+req.query.city+"', '"+req.query.state+"', '"+req.query.zip+"', '"+req.query.phone_number+"', '"+req.query.annual_sales+"');"
+	return shopQuery;
 }
 
 /**********************
@@ -347,7 +357,7 @@ function getOrderTable(){
 
 	return query;
 }
-
+/*
 // DO WE NEED THIS?
 app.get('/reset-table',function(req,res,next){
 	var context = {};
@@ -365,7 +375,7 @@ app.get('/reset-table',function(req,res,next){
 		})
 	});
 });
-
+*/
 app.use(function(req,res){
   res.status(404);
   res.render('404');
