@@ -31,10 +31,12 @@ app.get('/', function(req, res, next){
 
 });
 
+/* RETRIEVE INFO FROM DATABASE TO BUILD THE TABLE IN HTML */ 
+// THIS IS DONE
 app.get('/retrieve',function(req,res,next){
 	var context = {};
 
-	if(req.query.table_name == "`order`"){
+	if(req.query.table_name == "`order`"){ //special case for orders
 		// Retrieve the table with the given table_name
 		
 		mysql.pool.query('SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
@@ -51,7 +53,7 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
-	else if(req.query.table_name == "album_names"){
+	else if(req.query.table_name == "album_names"){ //special case for album_names
 		// This will retrieve just the album names for the order page
 		mysql.pool.query('SELECT album_name, retail_cost FROM album ORDER BY album_name ASC', function(err, rows, fields){
 			if(err){
@@ -62,7 +64,7 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
-	else{
+	else{ // select rows from table for building
 		// Retrieve the table with the given table_name
 		mysql.pool.query('SELECT * FROM ' + req.query.table_name, function(err, rows, fields){
 			if(err){
@@ -76,6 +78,7 @@ app.get('/retrieve',function(req,res,next){
 });
 
 /* SELECT VALUE FROM TABLE */
+// THIS SHOULD BE DONE
 app.post('/search',function(req,res,next){
 	var context = {};
 	
@@ -103,6 +106,7 @@ app.post('/search',function(req,res,next){
 	
 });
 
+/* INSERT QUERY INTO DB */
 app.get('/insert', function(req, res, next){
 	var context = {};
 	var list;

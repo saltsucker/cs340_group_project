@@ -226,8 +226,6 @@ function stopEditRow(tableID, button){
 				}
 				var data = parseData(response);
 
-				console.log(data);
-
 				// Add text back into the row with information sent back from the server
 				for(key in data[0]){
 				 	if(key){
@@ -260,22 +258,12 @@ function parseData(response){
 	var dict = JSON.parse(response);
 	dict = dict.results;
 
-	
-	// for(var i = 0; i < dict.length; i++){
-	// 	// Split the date to get rid of trailing "T" values
-	// 	if(dict[i]['date']){
-	// 		var date = dict[i]['date'].split("T")[0];
-	// 	}
-	// 	dict[i]['date'] = date;
-	// }
-
 	return dict;
 }
 
 function retrieveDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
-
 
 		var getString = "table_name=" + TABLE_NAME;
 		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);

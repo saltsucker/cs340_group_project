@@ -490,3 +490,12 @@ function search(tableID, button){
 		alert(e);
 	}
 }
+
+function deleteTable(tableID){
+	// Delete table rows (minus header rows) if one exists
+	var table = document.getElementById(tableID);
+	
+	for(var i = table.rows.length-1; i > 0; i--){
+		table.deleteRow(i);
+	}
+}
