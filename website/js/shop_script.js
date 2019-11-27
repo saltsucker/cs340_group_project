@@ -5,7 +5,8 @@ var HEADER_NAMES = ["store_name", "street_address", "city", "state", "zip", "tel
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
-var TABLE_NAME = "record_shop"
+var TABLE_NAME = "record_shop";
+var ID_NAME = "shop_id";
 var SQLPORT = "58376"
 //var SQLPORT = "50262"
 

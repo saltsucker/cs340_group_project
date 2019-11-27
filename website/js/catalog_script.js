@@ -5,6 +5,7 @@ var HEADER_NAMES = ["album_id", "artist_name", "album_name", "genre", "inventory
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
+var ID_NAME = "album_id";
 var TABLE_NAME = "album";
 var SQLPORT = "58376"
 //var SQLPORT = "50263"
