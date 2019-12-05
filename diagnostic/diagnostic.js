@@ -15,7 +15,8 @@ app.use(express.static('public'));
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-app.set('port', 50263);
+app.set('port', 58376);
+//app.set('port', 50263);
 
 app.use(function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -30,10 +31,12 @@ app.get('/', function(req, res, next){
 
 });
 
+/* RETRIEVE INFO FROM DATABASE TO BUILD THE TABLE IN HTML */ 
+// THIS IS DONE
 app.get('/retrieve',function(req,res,next){
 	var context = {};
 
-	if(req.query.table_name == "`order`"){
+	if(req.query.table_name == "`order`"){ //special case for orders
 		// Retrieve the table with the given table_name
 		
 		mysql.pool.query('SELECT `order`.order_id, `order`.order_qty, total_sale, ' + 
@@ -50,7 +53,7 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
-	else if(req.query.table_name == "album_names"){
+	else if(req.query.table_name == "album_names"){ //special case for album_names
 		// This will retrieve just the album names for the order page
 		mysql.pool.query('SELECT album_name, retail_cost FROM album ORDER BY album_name ASC', function(err, rows, fields){
 			if(err){
@@ -61,7 +64,7 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
-	else{
+	else{ // select rows from table for building
 		// Retrieve the table with the given table_name
 		mysql.pool.query('SELECT * FROM ' + req.query.table_name, function(err, rows, fields){
 			if(err){
@@ -74,6 +77,8 @@ app.get('/retrieve',function(req,res,next){
 	}	
 });
 
+/* SELECT VALUE FROM TABLE */
+// THIS SHOULD BE DONE
 app.post('/search',function(req,res,next){
 	var context = {};
 	
@@ -82,6 +87,12 @@ app.post('/search',function(req,res,next){
 	}
 	else if(req.body['table_name'] == "order"){
 		var tableQuery = getOrderTable();	
+	}
+	else if(req.body['table_name'] == "customer") {
+		var tableQuery = "SELECT * FROM customer"
+	}
+	else {
+		var tableQuery = "SELECT * FROM record_shop"
 	}
 
 	mysql.pool.query(tableQuery, function(err, rows, fields){
@@ -95,6 +106,8 @@ app.post('/search',function(req,res,next){
 	
 });
 
+/* INSERT QUERY INTO DB */
+// this is not done yet
 app.get('/insert', function(req, res, next){
 	var context = {};
 	var list;
@@ -113,6 +126,16 @@ app.get('/insert', function(req, res, next){
 	}
 	else if(req.query.table_name == "order_album"){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
+	}
+        else if(req.query.table_name == "customer") {
+		var tableQuery = insertCustomerQuery(req);
+	}
+	// my other statements for inserting customer are on OSU server... so annoying.
+	else if(req.query.table_name == "record_shop") {
+		var tableQuery = insertShopQuery(req);
+	}
+	else {
+		console.log("Insert did not work");
 	}
 	
 	// Insert row into table
@@ -161,10 +184,29 @@ function insertOrderQuery(req){
 
 	var orderQuery = 'INSERT INTO `order` (order_qty, total_sale, date_sold, customer_id, shop_id) ' +
 				'VALUES (' + req.query.order_qty + ',' + req.query.total_sale + ',' + req.query.date_sold + ',' + 
-				customerQuery + ', ' + shop_id + '); \n';
+				customerQuery + ',' + shop_id + '); \n';
 
 		
 	return orderQuery;
+}
+
+/*********************** 
+ *  * This function will insert a customer into order query
+ ************************/
+function insertCustomerQuery(req){
+	        var customerQuery = "INSERT INTO customer (f_name, l_name, telephone_number) VALUES ('"+req.query.first_name+"', '"+req.query.last_name+"', '"+req.query.tp_num+"')";
+
+		        return customerQuery;
+}
+
+/***********************
+ * Sets up a query for insertion for record shop
+ ***********************/
+function insertShopQuery(req){
+	//store_name, address, city, state, zip 
+	var shopQuery = "INSERT INTO record_shop (name, address, city, state, zip, telephone_number, annual_sales)" 
+		+ "VALUES ('"+req.query.store_name+"', '"+req.query.address+"', '"+req.query.city+"', '"+req.query.state+"', '"+req.query.zip+"', '"+req.query.phone_number+"', '"+req.query.annual_sales+"');"
+	return shopQuery;
 }
 
 /**********************
@@ -194,7 +236,7 @@ function insertOrderQuery(req){
 
 app.post('/edit', function(req, res, next){
 	var context = {};
-	var list = [req.body['name'], req.body['reps'], req.body['weight'], req.body['date'], req.body['unit'], req.body['id']];
+	//var list = [req.body['name'], req.body['reps'], req.body['weight'], req.body['date'], req.body['unit'], req.body['id']];
 
 	var queryList = [];
 	var table_name = req.body['table_name'];
@@ -209,6 +251,20 @@ app.post('/edit', function(req, res, next){
 		queryString = "UPDATE " + table_name + " SET artist_name=?, album_name=?, genre=?, inventory=?, wholesale_cost=?, retail_cost=?" +
 						" WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+	}
+	else if(table_name == "customer") {
+		queryList = [req.body['f_name'], req.body['l_name'], req.body['tp_num'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET f_name=?, l_name=?, tp_num=?" + " WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
+	}
+	else if(table_name == "record_shop") {
+		queryList = [req.body['name'], req.body['address'], req.body['city'], req.body['state'], req.body['zip'], req.body['phone_number'], req.body['annual_sales'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, phone_number=?, annual_sales=?" +
+						" WHERE " + id_name + "=?";
+		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
+	}
+	else {
+		console.log("Edit did not work");
 	}
 
 	mysql.pool.query(queryString, queryList, function(err, result){
@@ -249,6 +305,15 @@ app.post('/delete', function(req, res){
 	else if(table_name == "album"){
 		returnQuery = "SELECT * FROM album";
 	}
+	else if(table_name == "customer"){
+		returnQuery = "SELECT * FROM customer";
+	}
+	else if(table_name == "record_shop"){
+		returnQuery = "SELECT * FROM record_shop";
+	}
+	else {
+		console.log("Can't delete row");
+	}
 	// Deleting row from table
 	mysql.pool.query("DELETE FROM `" + table_name + "` WHERE " + id_name + "=?", id_to_del, function(err, result){
 		if(err){
@@ -273,8 +338,6 @@ app.post('/delete', function(req, res){
  ************************************/
  function getOrderDelQuery(album_name){
  	var delString;
-
-
 	return delString;
  }
 
@@ -294,8 +357,8 @@ function getOrderTable(){
 
 	return query;
 }
-
-
+/*
+// DO WE NEED THIS?
 app.get('/reset-table',function(req,res,next){
 	var context = {};
 	mysql.pool.query("DROP TABLE IF EXISTS workouts", function(err){ //replace your connection pool with the your variable containing the connection pool
@@ -312,7 +375,7 @@ app.get('/reset-table',function(req,res,next){
 		})
 	});
 });
-
+*/
 app.use(function(req,res){
   res.status(404);
   res.render('404');

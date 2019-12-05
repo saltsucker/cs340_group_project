@@ -7,7 +7,8 @@ var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "order";
 var ID_NAME = "order_id";
-var SQLPORT = "50263"
+var SQLPORT = "58376"
+//var SQLPORT = "50263"
 
 // Populate customer list
 populateCustomerList();
@@ -217,7 +218,7 @@ function stopEditRow(tableID, button){
 
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
-
+/*
 		var name = textFields[0].value;
 		var reps = textFields[1].value;
 		var weight = textFields[2].value;
@@ -234,7 +235,7 @@ function stopEditRow(tableID, button){
 		}
 
 		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
-
+*/
 		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
