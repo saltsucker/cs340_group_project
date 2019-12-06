@@ -16,22 +16,22 @@
 <fieldset><h2>add customer</h2>
 	<form id="add_customer">
 		first name:<br>
-		<input type="text" placeholder="John" name="first_name" value=""><br>
+		<input type="text" placeholder="John" name="f_name" value=""><br>
 		last name:<br>
-		<input type="text" name="last_name" placeholder="Smith" value=""><br>
+		<input type="text" name="l_name" placeholder="Smith" value=""><br>
 
 		<!-- this falls back to 'text' if browser does not support tel -->
 		telepone number:<br> 
-		<input type="tel" name="phone_number" placeholder="713-459-7811" value=><br>
+		<input type="tel" name="telephone_number" placeholder="713-459-7811" value=""><br>
 
-		<input type="button" value="add new customer" onclick="addToDB('dataTable', this)" />
+		<input type="button" value="add customer" onclick="addToDB('dataTable', this)" />
 	</form>
 </fieldset><br>
 <fieldset><h2>search customer</h2>
-	<form id="search_customer">
+	<form id="search"></form>
 		search customer:<br>
-		<input type="text" placeholder="billy bob/id/address..." name="customer_search_query"><br>
-		<input type="button" value="search customer" onclick="addToDB('dataTable', this)" />
+		<input type="text" placeholder="billy bob/id/address..." name="search_query"><br>
+		<input type="button" value="search" onclick="search('dataTable', this)" />
 	</form>
 </fieldset><br>
   <script type="text/javascript" src="../js/customer_script.js"></script>
