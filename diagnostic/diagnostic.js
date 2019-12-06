@@ -64,9 +64,22 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
+	else if(req.query.table_name == "customer"){
+		console.log("retriev was called for customer table")
+		mysql.pool.query('SELECT * FROM customer', function(err, rows, fields){
+			if(err) {
+				next(err);
+				return;
+			}
+			context.results = rows
+			console.log(context)
+			res.send(context);
+		});
+	}
 	else{ // select rows from table for building
 		// Retrieve the table with the given table_name
 		mysql.pool.query('SELECT * FROM ' + req.query.table_name, function(err, rows, fields){
+			console.log("select was called")
 			if(err){
 				next(err);
 				return;
@@ -81,6 +94,7 @@ app.get('/retrieve',function(req,res,next){
 // THIS SHOULD BE DONE
 app.post('/search',function(req,res,next){
 	var context = {};
+	console.log("search was called")
 	
 	if(req.body['table_name'] == "album"){
 		var tableQuery = "SELECT * FROM album";	
@@ -90,9 +104,11 @@ app.post('/search',function(req,res,next){
 	}
 	else if(req.body['table_name'] == "customer") {
 		var tableQuery = "SELECT * FROM customer"
+		console.log("customer select was called")
 	}
 	else {
 		var tableQuery = "SELECT * FROM record_shop"
+		console.log("shop select was called")
 	}
 
 	mysql.pool.query(tableQuery, function(err, rows, fields){
@@ -127,7 +143,7 @@ app.get('/insert', function(req, res, next){
 	else if(req.query.table_name == "order_album"){
 		var tableQuery = insertOrderAlbumQuery(req.query.album_names);
 	}
-        else if(req.query.table_name == "customer") {
+	else if(req.query.table_name == "customer") {
 		var tableQuery = insertCustomerQuery(req);
 	}
 	// my other statements for inserting customer are on OSU server... so annoying.
@@ -145,8 +161,19 @@ app.get('/insert', function(req, res, next){
 			return;
 		}
 
-		// Return data from whatever table we're looking at in the database
-		if(req.query.table_name == "order_album"){
+		// Return data from whatever table we're looking at in the database to rebuild the table on fly
+		if(req.query.table_name == "customer") {
+			var insertId = result.insertId;
+			mysql.pool.query('SELECT * FROM customer WHERE customer_id=?', [insertId], function(err, rows, fields){
+				if(err){
+					next(err);
+					return;
+				}
+				context.results = rows;
+				res.send(context);
+			});
+		} 
+		else if(req.query.table_name == "order_album"){
 			mysql.pool.query(getOrderTable(), function(err, rows, fields){
 				if(err){
 					next(err);
@@ -156,6 +183,17 @@ app.get('/insert', function(req, res, next){
 				res.send(context);
 			});
 		}
+		else if(req.query.table_name == "record_shop") {
+			var insertId = result.insertId;
+			mysql.pool.query('SELECT * FROM record_shop WHERE shop_id=?', [insertId], function(err, rows, fields){
+				if(err){
+					next(err);
+					return;
+				}
+				context.results = rows;
+				res.send(context);
+			});
+		} 
 		else{
 			var insertId = result.insertId;
 			mysql.pool.query('SELECT * FROM album WHERE album_id=?', [insertId], function(err, rows, fields){
@@ -167,6 +205,7 @@ app.get('/insert', function(req, res, next){
 				res.send(context);
 			});
 		}
+		
 	});
 });
 
@@ -194,9 +233,8 @@ function insertOrderQuery(req){
  *  * This function will insert a customer into order query
  ************************/
 function insertCustomerQuery(req){
-	        var customerQuery = "INSERT INTO customer (f_name, l_name, telephone_number) VALUES ('"+req.query.first_name+"', '"+req.query.last_name+"', '"+req.query.tp_num+"')";
-
-		        return customerQuery;
+	var customerQuery = "INSERT INTO customer (f_name, l_name, telephone_number) VALUES ('" + req.query.f_name + "', '" + req.query.l_name + "', '" + req.query.telephone_number + "')";
+	return customerQuery;
 }
 
 /***********************
@@ -254,7 +292,7 @@ app.post('/edit', function(req, res, next){
 	}
 	else if(table_name == "customer") {
 		queryList = [req.body['f_name'], req.body['l_name'], req.body['tp_num'], req.body['id']];
-		queryString = "UPDATE " + table_name + " SET f_name=?, l_name=?, tp_num=?" + " WHERE " + id_name + "=?";
+		queryString = "UPDATE " + table_name + " SET f_name=?, l_name=?, telephone_number=?" + " WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
 	}
 	else if(table_name == "record_shop") {
