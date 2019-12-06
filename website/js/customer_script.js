@@ -8,7 +8,7 @@ var ROWS = 1;
 var TABLE_NAME = "customer";
 var TABLE_ID = "dataTable";
 var ID_NAME = "customer_id";
-var SQLPORT = "58376";
+var SQLPORT = "50261";
 
 /***************
 * Create Table *

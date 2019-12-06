@@ -7,8 +7,7 @@ var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "order";
 var ID_NAME = "order_id";
-var SQLPORT = "58376"
-//var SQLPORT = "50263"
+var SQLPORT = "50261";
 
 // Populate customer list
 populateCustomerList();
@@ -339,6 +338,8 @@ function addToDB(tableID, button){
 		// Get date sold
 		var date_sold = document.getElementById("add_order").elements["date_sold"].value;
 
+		console.log(date_sold);
+
 		// Get customer name and split into first and last name
 		var customer_name = document.getElementById("customerList").value;
 		var f_name = customer_name.split(" ")[0]
@@ -362,6 +363,8 @@ function addToDB(tableID, button){
 					if(req.response != null){
 						var response = req.response;
 					}
+
+					console.log(req.response);
 
 					// After the order is entered (happened above), now add the 
 					// relationship between the order and the album
