@@ -75,6 +75,18 @@ app.get('/retrieve',function(req,res,next){
 			res.send(context);
 		});
 	}
+	else if(req.query.table_name == "record_shop"){
+		console.log("retriev was called for record_shop table")
+		mysql.pool.query('SELECT * FROM record_shop', function(err, rows, fields){
+			if(err) {
+				next(err);
+				return;
+			}
+			context.results = rows
+			console.log(context)
+			res.send(context);
+		});
+	}
 	else{ // select rows from table for building
 		// Retrieve the table with the given table_name
 		mysql.pool.query('SELECT * FROM ' + req.query.table_name, function(err, rows, fields){
@@ -147,6 +159,7 @@ app.get('/insert', function(req, res, next){
 	}
 	// my other statements for inserting customer are on OSU server... so annoying.
 	else if(req.query.table_name == "record_shop") {
+		console.log("shop insert query called")
 		var tableQuery = insertShopQuery(req);
 	}
 	else {
@@ -240,8 +253,8 @@ function insertCustomerQuery(req){
  ***********************/
 function insertShopQuery(req){
 	//store_name, address, city, state, zip 
-	var shopQuery = "INSERT INTO record_shop (name, address, city, state, zip, telephone_number, annual_sales)" 
-		+ "VALUES ('"+req.query.store_name+"', '"+req.query.address+"', '"+req.query.city+"', '"+req.query.state+"', '"+req.query.zip+"', '"+req.query.phone_number+"', '"+req.query.annual_sales+"');"
+	var shopQuery = "INSERT INTO record_shop (name, address, city, state, zip, telephone_number, annual_sales)" + 
+	"VALUES ('"+req.query.name+"', '"+req.query.address+"', '"+req.query.city+"', '"+req.query.state+"', '"+req.query.zip+"', '"+req.query.telephone_number+"', '"+req.query.annual_sales+"');"
 	return shopQuery;
 }
 
@@ -289,13 +302,13 @@ app.post('/edit', function(req, res, next){
 		returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
 	}
 	else if(table_name == "customer") {
-		queryList = [req.body['f_name'], req.body['l_name'], req.body['tp_num'], req.body['id']];
+		queryList = [req.body['f_name'], req.body['l_name'], req.body['telephone_number'], req.body['id']];
 		queryString = "UPDATE " + table_name + " SET f_name=?, l_name=?, telephone_number=?" + " WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
 	}
 	else if(table_name == "record_shop") {
-		queryList = [req.body['name'], req.body['address'], req.body['city'], req.body['state'], req.body['zip'], req.body['phone_number'], req.body['annual_sales'], req.body['id']];
-		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, phone_number=?, annual_sales=?" +
+		queryList = [req.body['name'], req.body['address'], req.body['city'], req.body['state'], req.body['zip'], req.body['telephone_number'], req.body['annual_sales'], req.body['id']];
+		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, telephone_number=?, annual_sales=?" +
 						" WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
 	}
