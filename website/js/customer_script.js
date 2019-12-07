@@ -208,38 +208,46 @@ function stopEditRow(tableID, button){
 		var telephone_number = textFields[3].value;
 		var id = currentRow.getAttribute("id");
 
-		var payload = {"id": id, "f_name": f_name, "l_name": l_name, "telephone_number": telephone_number, "table_name": TABLE_NAME, "id_name": ID_NAME};
+		if(f_name != "" && l_name != "" && telephone_number != ""){
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
-		req.setRequestHeader('Content-Type', 'application/json');
+			var payload = {"id": id, "f_name": f_name, "l_name": l_name, "telephone_number": telephone_number, "table_name": TABLE_NAME, "id_name": ID_NAME};
 
-		req.addEventListener('load', function(){			
-			// Request was okay
-			if (req.status > 199 && req.status < 400){
-				// Parse data and put in array
-				if(req.response != null){
-					var response = req.response;
-				}
-				var data = parseData(response);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
+			req.setRequestHeader('Content-Type', 'application/json');
 
-				// Add text back into the row with information sent back from the server
-				for(key in data[0]){
-				 	if(key){
-						var id = key + "_" + data[0][ID_NAME];
-						document.getElementById(id).value = data[0][key];
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						var response = req.response;
+					}
+					var data = parseData(response);
+
+					// Add text back into the row with information sent back from the server
+					for(key in data[0]){
+						if(key){
+							var id = key + "_" + data[0][ID_NAME];
+							document.getElementById(id).value = data[0][key];
+						}
 					}
 				}
-			}
-			else{
-				// Something went wrong
-				console.log("Error in POST request: " + req.statusText)
-			}
-		});
+				else{
+					// Something went wrong
+					console.log("Error in POST request: " + req.statusText)
+				}
+			});
 
-		var jsonPayload = JSON.stringify(payload);
+			var jsonPayload = JSON.stringify(payload);
 
-		// Send request
-		req.send(jsonPayload);
+			// Send request
+			req.send(jsonPayload);
+		}
+		else {
+			alert("All customer fields required. Customer not edited");
+			deleteTable(tableID);
+			retrieveDB(tableID, button);
+		}
 	}
 	catch(e){
 		alert(e);
@@ -301,7 +309,7 @@ function addToDB(tableID, button){
 		var l_name = document.getElementById("add_customer").elements["l_name"].value;
 		var telephone_number = document.getElementById("add_customer").elements["telephone_number"].value;
 
-		if(f_name != ""){
+		if(f_name != "" && l_name != "" && telephone_number != ""){
 			var getString = "table_name=" + TABLE_NAME + "&f_name=" + f_name + "&l_name=" + l_name + "&telephone_number=" + telephone_number;
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
 

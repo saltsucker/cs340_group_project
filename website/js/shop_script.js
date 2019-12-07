@@ -1,7 +1,7 @@
 /***************
 * Global Vars  *
 ***************/
-var HEADER_NAMES = ["store_name", "street_address", "city", "state", "zip", "telephone", "sales"];
+var HEADER_NAMES = ["shop_id", "name", "address", "city", "state", "zip", "telephone_number", "annual_sales"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
 var TABLE_ID = "dataTable";
@@ -111,10 +111,10 @@ function deleteRow(tableID, button){
 
 			/*************INFORMATION FOR POST****************/
 			// Get the first child/column of the row. This will be the order_id
-			order_id = currentRow.cells[0].firstChild.value;
+			shop_id = currentRow.cells[0].firstChild.value;
 
 			var payload = {table_name: TABLE_NAME,
-							id: order_id,
+							id: shop_id,
 							id_name: ID_NAME};
 
 			// console.log(currentRow)
@@ -197,48 +197,57 @@ function stopEditRow(tableID, button){
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
 
-		//store_name, address, city, state, zip, phone_number, annual_sales
-		var name = textFields[0].value;
-		var address = textFields[1].value;
-		var city = textFields[2].value;
-		var state = textFields[3].value;
-		var zip = textFields[4].value;
-		var phone_number = textFields[5].value;
-		var annual_sales = textFields[6].value;
+		var name = textFields[1].value;
+		var address = textFields[2].value;
+		var city = textFields[3].value;
+		var state = textFields[4].value;
+		var zip = textFields[5].value;
+		var telephone_number = textFields[6].value;
+		var annual_sales = textFields[7].value;
 		var id = currentRow.getAttribute("id");
+		
+		if(name != "" && address != "" &&
+		city != "" && state != "" && 
+		zip != "" && telephone_number != "" && annual_sales != "") {
 
-		var payload = {"id" : id, "name": name, "address": address, "city": city, "state": state, "zip": zip, "phone_number": phone_number, "annual_sales" : annual_sales, "id_name" : ID_NAME};
+			var payload = {"id" : id, "name": name, "address": address, "city": city, "state": state, "zip": zip, "telephone_number": telephone_number, "annual_sales" : annual_sales, "table_name" : TABLE_NAME, "id_name" : ID_NAME};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
-		req.setRequestHeader('Content-Type', 'application/json');
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
+			req.setRequestHeader('Content-Type', 'application/json');
 
-		req.addEventListener('load', function(){			
-			// Request was okay
-			if (req.status > 199 && req.status < 400){
-				// Parse data and put in array
-				if(req.response != null){
-					var response = req.response;
-				}
-				var data = parseData(response);
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						var response = req.response;
+					}
+					var data = parseData(response);
 
-				// Add text back into the row with information sent back from the server
-				for(key in data[0]){
-				 	if(key){
-						var id = key + "_" + data[0][ID_NAME];
-						document.getElementById(id).value = data[0][key];
+					// Add text back into the row with information sent back from the server
+					for(key in data[0]){
+						if(key){
+							var id = key + "_" + data[0][ID_NAME];
+							document.getElementById(id).value = data[0][key];
+						}
 					}
 				}
-			}
-			else{
-				// Something went wrong
-				console.log("Error in POST request: " + req.statusText)
-			}
-		});
+				else{
+					// Something went wrong
+					console.log("Error in POST request: " + req.statusText)
+				}
+			});
 
-		var jsonPayload = JSON.stringify(payload);
+			var jsonPayload = JSON.stringify(payload);
 
-		// Send request
-		req.send(jsonPayload);
+			// Send request
+			req.send(jsonPayload);
+		}
+		else {
+			alert("All fields required. Nothing edited.")
+			deleteTable(tableID);
+			retrieveDB(tableID, button);
+		}
 	}
 	catch(e){
 		alert(e);
@@ -295,21 +304,20 @@ function addToDB(tableID, button){
 		var req = new XMLHttpRequest();	
 
 		// Get data in the form
-		//store_name, address, city, state, zip, phone_number, annual_sales
-		var store_name = document.getElementById("add_shop").elements["store_name"].value;
+		var name = document.getElementById("add_shop").elements["name"].value;
 		var address = document.getElementById("add_shop").elements["address"].value;
 		var city = document.getElementById("add_shop").elements["city"].value;
 		var state = document.getElementById("add_shop").elements["state"].value;
 		var zip = document.getElementById("add_shop").elements["zip"].value;
-		var phone_number = document.getElementById("add_shop").elements["phone_number"].value;
-		var annual_sales = document.getElementById("add_shop").elements["sales"].value;
+		var telephone_number = document.getElementById("add_shop").elements["telephone_number"].value;
+		var annual_sales = document.getElementById("add_shop").elements["annual_sales"].value;
 
-		if(store_name != ""){
-			// store_name, address, city, state, zip
-			console.log("name: " + store_name);
-			var getString = "store_name=" + store_name + "&address=" + address + "&city=" + city +
-							"&state=" + state + "&zip=" + zip + "&telephone_number=" + phone_number + "&annual_sales=" + annual_sales;
-
+		console.log(name, address, city);
+		if(name != "" && address != "" && city != "" && state != "" && 
+		zip != "" && telephone_number != "" && annual_sales != "") {
+			var getString = "table_name=" + TABLE_NAME + "&name=" + name + "&address=" + address + "&city=" + city +
+							"&state=" + state + "&zip=" + zip + "&telephone_number=" + telephone_number + "&annual_sales=" + annual_sales;
+			console.log(getString)
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/insert?' + getString, true);
 
 			req.addEventListener('load', function(){			
@@ -332,9 +340,87 @@ function addToDB(tableID, button){
 			req.send(null);
 		}
 		else{
-			alert("Name must be a value. Exercise not added to Database.");
+			alert("Fields cannot be blank. Not added to Database.");
 		}
 
+	}
+	catch(e){
+		alert(e);
+	}
+}
+
+
+function search(tableID, button){
+	try{
+		var req = new XMLHttpRequest();
+
+		var payload = {"table_name": TABLE_NAME};
+
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/search', true);
+		req.setRequestHeader('Content-Type', 'application/json');
+
+		req.addEventListener('load', function(){			
+			// Request was okay
+			if (req.status > 199 && req.status < 400){
+				// Parse data and put in array
+				if(req.response != null){
+					var response = req.response;
+				}
+				var data = parseData(response);
+
+				// Get the search term that the user is searching for
+				var searchQuery = document.getElementsByName("search_query")[0].value;
+
+				// Trim any white spaces from the head or tail of the search query
+				searchQuery = searchQuery.trim();
+
+				// Need to store the indeces from data[] to keep after we search data for valid matches
+				var iToKeep = [];
+
+				// Go through the data returned in the table (should be all the table data)
+				for(var i = 0; i < data.length; i++){
+					// Set found flag to 0. I.e., assume we won't find the searchQuery
+					var foundFlag = 0;
+
+					// Each ith element of data[] will be a row in the table. Go through each row
+					//	and search for searchQuery
+					for(key in data[i]){
+						// If the searchQuery is not in any of the data returned from the 
+						//	table (i.e., it wasn't searched for), delete it from the dictionary
+						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
+							foundFlag = 1;
+						}
+					}
+					if(foundFlag){
+						iToKeep.push(i);
+					}
+				}
+
+				// Add the items we want to keep to a new array
+				var filteredData = [];
+
+				for(var i = 0; i < iToKeep.length; i++){
+					indexToKeep = iToKeep[i];
+					filteredData.push(data[indexToKeep]);
+				}
+
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table with filtered search data
+				buildTable(tableID, filteredData);
+
+			}
+			else{
+				// Something went wrong
+				console.log("Error in POST request: " + req.statusText)
+			}
+		});
+
+		var jsonPayload = JSON.stringify(payload);
+
+		// Send request
+		req.send(jsonPayload);
 	}
 	catch(e){
 		alert(e);
@@ -407,83 +493,6 @@ function buildTable(tableID, data){
 			// }
 			document.getElementById(key + "_" + data[i][ID_NAME]).value = data[i][key];
 		}
-	}
-}
-
-function search(tableID, button){
-	try{
-		var req = new XMLHttpRequest();
-
-		var payload = {"table_name": "record_shop"};
-
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/search', true);
-		req.setRequestHeader('Content-Type', 'application/json');
-
-		req.addEventListener('load', function(){			
-			// Request was okay
-			if (req.status > 199 && req.status < 400){
-				// Parse data and put in array
-				if(req.response != null){
-					var response = req.response;
-				}
-				var data = parseData(response);
-
-				// Get the search term that the user is searching for
-				var searchQuery = document.getElementsByName("search_query")[0].value;
-
-				// Trim any white spaces from the head or tail of the search query
-				searchQuery = searchQuery.trim();
-
-				// Need to store the indeces from data[] to keep after we search data for valid matches
-				var iToKeep = [];
-
-				// Go through the data returned in the table (should be all the table data)
-				for(var i = 0; i < data.length; i++){
-					// Set found flag to 0. I.e., assume we won't find the searchQuery
-					var foundFlag = 0;
-
-					// Each ith element of data[] will be a row in the table. Go through each row
-					//	and search for searchQuery
-					for(key in data[i]){
-						// If the searchQuery is not in any of the data returned from the 
-						//	table (i.e., it wasn't searched for), delete it from the dictionary
-						if(String(data[i][key]).toLowerCase().indexOf(searchQuery) >= 0){
-							foundFlag = 1;
-						}
-					}
-					if(foundFlag){
-						iToKeep.push(i);
-					}
-				}
-
-				// Add the items we want to keep to a new array
-				var filteredData = [];
-
-				for(var i = 0; i < iToKeep.length; i++){
-					indexToKeep = iToKeep[i];
-					filteredData.push(data[indexToKeep]);
-				}
-
-				// Delete table because we're going to rebuild it with new data
-				deleteTable(tableID);
-
-				// Build table with filtered search data
-				buildTable(tableID, filteredData);
-
-			}
-			else{
-				// Something went wrong
-				console.log("Error in POST request: " + req.statusText)
-			}
-		});
-
-		var jsonPayload = JSON.stringify(payload);
-
-		// Send request
-		req.send(jsonPayload);
-	}
-	catch(e){
-		alert(e);
 	}
 }
 

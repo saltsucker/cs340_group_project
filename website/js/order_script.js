@@ -1,8 +1,3 @@
-/****************
- * Required outside resources
- ****************/
-var dbcon = require('../../node_modules/dbcon.js');
-
 /***************
 * Global Vars  *
 ***************/
