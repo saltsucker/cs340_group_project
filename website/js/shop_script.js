@@ -7,8 +7,7 @@ var ROWS = 1;
 var TABLE_ID = "dataTable";
 var TABLE_NAME = "record_shop";
 var ID_NAME = "shop_id";
-var SQLPORT = "58376"
-//var SQLPORT = "50262"
+var SQLPORT = "50261";
 
 /***************
 * Create Table *
@@ -261,7 +260,7 @@ function retrieveDB(tableID, button){
 		var req = new XMLHttpRequest();	
 
 		var getString = "table_name=" + TABLE_NAME;
-		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve' + getString, true);
+		req.open('GET', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/retrieve?' + getString, true);
 
 		req.addEventListener('load', function(){			
 			// Request was okay
