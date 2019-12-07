@@ -184,9 +184,7 @@ function insertOrderQuery(req){
 	var orderQuery = 'INSERT INTO `order` (order_qty, total_sale, date_sold, customer_id, shop_id) ' +
 				'VALUES (' + req.query.order_qty + ',' + req.query.total_sale + ',\'' + req.query.date_sold + '\',' + 
 				customerQuery + ',' + shop_id + '); \n';
-
-	console.log(orderQuery);
-		
+	
 	return orderQuery;
 }
 
@@ -262,6 +260,12 @@ app.post('/edit', function(req, res, next){
 		queryString = "UPDATE " + table_name + " SET name=?, address=?, city=?, state=?, zip=?, phone_number=?, annual_sales=?" +
 						" WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
+	}
+	else if (table_name == "order"){
+		queryList = [req.body['date_sold'], req.body['total_sale'], req.body['id']];
+		queryString = "UPDATE `" + table_name + "` SET date_sold=?, total_sale=?" + " WHERE " + id_name + "=?";
+		//returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+		returnQuery = getOrderTable();
 	}
 	else {
 		console.log("Edit did not work");
