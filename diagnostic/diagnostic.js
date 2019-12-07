@@ -15,8 +15,7 @@ app.use(express.static('public'));
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-app.set('port', 58376);
-//app.set('port', 50263);
+app.set('port', 50261);
 
 app.use(function(req, res, next){
 	res.header('Access-Control-Allow-Origin', '*');
@@ -220,12 +219,11 @@ function insertOrderQuery(req){
 	// Subquery: We will query the customer database with the given f_name and l_name
 	customerQuery = '(SELECT customer_id FROM customer WHERE f_name = "' + req.query.f_name +
 					'" AND l_name = "' + req.query.l_name + '")';
-
+	
 	var orderQuery = 'INSERT INTO `order` (order_qty, total_sale, date_sold, customer_id, shop_id) ' +
-				'VALUES (' + req.query.order_qty + ',' + req.query.total_sale + ',' + req.query.date_sold + ',' + 
+				'VALUES (' + req.query.order_qty + ',' + req.query.total_sale + ',\'' + req.query.date_sold + '\',' + 
 				customerQuery + ',' + shop_id + '); \n';
-
-		
+	
 	return orderQuery;
 }
 
@@ -301,6 +299,12 @@ app.post('/edit', function(req, res, next){
 						" WHERE " + id_name + "=?";
 		returnQuery = "SELECT * FROM " + table_name + " WHERE " + id_name + "=?";
 	}
+	else if (table_name == "order"){
+		queryList = [req.body['date_sold'], req.body['total_sale'], req.body['id']];
+		queryString = "UPDATE `" + table_name + "` SET date_sold=?, total_sale=?" + " WHERE " + id_name + "=?";
+		//returnQuery = "SELECT * FROM `" + table_name + "` WHERE " + id_name + "=?";
+		returnQuery = getOrderTable();
+	}
 	else {
 		console.log("Edit did not work");
 	}
@@ -336,7 +340,6 @@ app.post('/delete', function(req, res){
 
 	// Defining the query that we want to send back after we delete from the table
 	if(table_name == "order"){
-		console.log(req.body);
 		delQuery = getOrderDelQuery(req.body['album_name']);
 		returnQuery = getOrderTable(); // This is along query. It uses JOINS so I made it a function
 	}
