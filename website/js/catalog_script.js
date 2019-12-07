@@ -210,40 +210,54 @@ function stopEditRow(tableID, button){
 		var retail_cost = textFields[6].value;
 		var id = currentRow.getAttribute("id");
 
-		var payload = {"id": id, "artist_name": artist_name, "album_name": album_name, "genre": genre, 
-						"inventory": inventory, "wholesale_cost": wholesale_cost, "retail_cost": retail_cost,
-						"table_name": TABLE_NAME, "id_name": ID_NAME};
+		// Error checking
+		if(artist_name != "" && album_name != "" &&
+			genre != "" && inventory != "" && 
+			wholesale_cost != "" && retail_cost != ""){
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
-		req.setRequestHeader('Content-Type', 'application/json');
+			var payload = {"id": id, "artist_name": artist_name, "album_name": album_name, "genre": genre, 
+							"inventory": inventory, "wholesale_cost": wholesale_cost, "retail_cost": retail_cost,
+							"table_name": TABLE_NAME, "id_name": ID_NAME};
 
-		req.addEventListener('load', function(){			
-			// Request was okay
-			if (req.status > 199 && req.status < 400){
-				// Parse data and put in array
-				if(req.response != null){
-					var response = req.response;
-				}
-				var data = parseData(response);
+			req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
+			req.setRequestHeader('Content-Type', 'application/json');
 
-				// Add text back into the row with information sent back from the server
-				for(key in data[0]){
-				 	if(key){
-						var id = key + "_" + data[0][ID_NAME];
-						document.getElementById(id).value = data[0][key];
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						var response = req.response;
+					}
+					var data = parseData(response);
+
+					// Add text back into the row with information sent back from the server
+					for(key in data[0]){
+					 	if(key){
+							var id = key + "_" + data[0][ID_NAME];
+							document.getElementById(id).value = data[0][key];
+						}
 					}
 				}
-			}
-			else{
-				// Something went wrong
-				console.log("Error in POST request: " + req.statusText)
-			}
-		});
+				else{
+					// Something went wrong
+					console.log("Error in POST request: " + req.statusText)
+				}
+			});
 
-		var jsonPayload = JSON.stringify(payload);
+			var jsonPayload = JSON.stringify(payload);
 
-		// Send request
-		req.send(jsonPayload);
+			// Send request
+			req.send(jsonPayload);
+		}
+		else{
+			// Alert
+			alert("All album fields required. Album not edited.");
+
+			// Since values were changed, delete table, retrieve the DB and build new table
+			deleteTable(tableID);
+			retrieveDB(tableID, button);
+		}
 	}
 	catch(e){
 		alert(e);
@@ -308,7 +322,9 @@ function addToDB(tableID, button){
 		var wholesale_cost = document.getElementById("add_album").elements["wholesale_cost"].value;
 		var retail_cost = document.getElementById("add_album").elements["retail_cost"].value;
 
-		if(artist_name != ""){
+		if(artist_name != "" && album_name != "" &&
+			genre != "" && inventory != "" && 
+			wholesale_cost != "" && retail_cost != ""){
 			var getString = "table_name=" + TABLE_NAME + "&artist_name=" + artist_name 
 							+ "&retail_cost=" + retail_cost + "&wholesale_cost=" + wholesale_cost 
 							+ "&album_name=" + album_name + "&genre=" + genre 
@@ -325,7 +341,7 @@ function addToDB(tableID, button){
 						var response = req.response;
 					}
 					var data = parseData(response);
-					console.log(data);
+
 					buildTable(tableID, data);
 				}
 				else{
@@ -338,7 +354,7 @@ function addToDB(tableID, button){
 			req.send(null);
 		}
 		else{
-			alert("Name must be a value. Exercise not added to Database.");
+			alert("All album fields required. Album not added to database.");
 		}
 
 	}

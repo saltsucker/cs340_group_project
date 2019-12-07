@@ -181,7 +181,9 @@ function editRow(tableID, button){
 			var testString = String(textFields[i].getAttribute("id"));
 
 			// If the name has "id" in it, we don't want to make it editable
-			if(testString.indexOf("id") == -1){
+			if(testString.indexOf("id") == -1 &&
+				testString.indexOf("name") == -1 &&
+				testString.indexOf("order_qty") == -1){
 				textFields[i].readOnly = false;
 				textFields[i].className = "editRow";
 			}
@@ -217,24 +219,24 @@ function stopEditRow(tableID, button){
 
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
-/*
-		var name = textFields[0].value;
-		var reps = textFields[1].value;
-		var weight = textFields[2].value;
-		var date = textFields[3].value;
-		var unit = textFields[4].value;
-		var id = currentRow.getAttribute("id");
 
-		// Check if user entered in kgs or lbs
-		if(unit == 'lbs' || unit == 'lb' || unit == 'pound' || unit == 'pounds' || unit == 0){
-			unit = 0;
-		}
-		else if(unit == 'kgs' || unit == 'kg' || unit == 'kilograms' || unit == 1){
-			unit = 1;
-		}
+		var date_sold = textFields[6].value;
+		var total_sale = textFields[7].value;
 
-		var payload = {"name": name, "reps": reps, "weight": weight, "date": date, "unit": unit, "id":id};
-*/
+		// Get id of row
+			for(var i = 0; i < textFields.length; i++){
+				// Make a string out of the cell name
+				var testString = String(textFields[i].getAttribute("id"));
+
+				// If the name has "id" in it, we don't want to make it editable
+				if(testString.indexOf("order_id") > -1){
+					var id = textFields[i].value;
+				}
+			}
+
+		var payload = {"id": id, "date_sold": date_sold, "total_sale": total_sale,
+						"table_name": TABLE_NAME, "id_name": ID_NAME};
+
 		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
@@ -247,13 +249,11 @@ function stopEditRow(tableID, button){
 				}
 				var data = parseData(response);
 
-				// Add text back into the row with information sent back from the server
-				for(key in data[0]){
-				 	if(key){
-						var id = key + "_" + data[0]['id'];
-						document.getElementById(id).value = data[0][key];
-					}
-				}
+				// Delete table because we're going to rebuild it with new data
+				deleteTable(tableID);
+
+				// Build table back up with new data
+				buildTable(tableID, data);
 			}
 			else{
 				// Something went wrong
@@ -338,8 +338,6 @@ function addToDB(tableID, button){
 		// Get date sold
 		var date_sold = document.getElementById("add_order").elements["date_sold"].value;
 
-		console.log(date_sold);
-
 		// Get customer name and split into first and last name
 		var customer_name = document.getElementById("customerList").value;
 		var f_name = customer_name.split(" ")[0]
@@ -349,7 +347,8 @@ function addToDB(tableID, button){
 		var total_sales = document.getElementsByName("total_sale")[0].value;
 		total_sales = total_sales.replace("$", "");
 
-		if(customer_name != ""){
+		if(customer_name != "" && album_names.length > 0 &&
+			date_sold != "" && customer_name != ""){
 			var getString = "table_name=" + TABLE_NAME + "&order_qty=" + album_names.length +
 			"&total_sale=" + total_sales + "&date_sold=" + date_sold + 
 			"&f_name=" + f_name + "&l_name=" + l_name;
@@ -363,8 +362,6 @@ function addToDB(tableID, button){
 					if(req.response != null){
 						var response = req.response;
 					}
-
-					console.log(req.response);
 
 					// After the order is entered (happened above), now add the 
 					// relationship between the order and the album
@@ -384,7 +381,7 @@ function addToDB(tableID, button){
 			resetForm();
 		}
 		else{
-			alert("Name must be a value. Order not added to Database.");
+			alert("All fields required. Order not added to Database.");
 		}
 
 	}
@@ -588,6 +585,12 @@ function buildTable(tableID, data){
 				if(j < COLUMNS-2){
 					// Add text field
 					var textField = document.createElement("input");
+
+					// Change type of textField to date if in "date_sold" column
+					if(HEADER_NAMES[j] == "date_sold"){
+						textField.setAttribute("type", "date");
+					}
+
 					textField.setAttribute("id", i + "_" + HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
 					textField.readOnly = true;
 					col.appendChild(textField);
