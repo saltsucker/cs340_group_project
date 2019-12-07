@@ -2,12 +2,12 @@
 /***************
 * Global Vars  *
 ***************/
-var HEADER_NAMES = ["customer_id", "customer_fname", "customer_lname", "telephone"];
+var HEADER_NAMES = ["customer_id", "f_name", "l_name", "telephone_number"];
 var COLUMNS = HEADER_NAMES.length+2;	// +2 is to add the Edit & Delete button
 var ROWS = 1;
-var TABLE_NAME = "customer";
 var TABLE_ID = "dataTable";
 var ID_NAME = "customer_id";
+var TABLE_NAME = "customer";
 var SQLPORT = "50261";
 
 /***************
@@ -151,11 +151,12 @@ function editRow(tableID, button){
 			return;
 		}
 		else{
-			// Change button look
-			button.className = "editButton";
+			// Change button to look cool and gray
+			button.className = "editButton";	// Changes button look to be gray
 			button.innerHTML = "Submit";
 		}
 
+		// Make the cells in the table editable so user can put in data
 		for(var i = 0; i < textFields.length; i++){
 			// Make a string out of the cell name
 			var testString = String(textFields[i].getAttribute("id"));
@@ -166,13 +167,11 @@ function editRow(tableID, button){
 				textFields[i].className = "editRow";
 			}
 		}
-		
 	}
 	catch(e){
 		alert(e);
 	}
 }
-
 
 /***********************
 * This function actually submits 
@@ -203,13 +202,13 @@ function stopEditRow(tableID, button){
 
 		// Gather information to send information to server to update Database
 		var textFields = currentRow.getElementsByTagName("input");
-		// first_name, last_name, tp_num
-		var f_name = textFields[0].value;
-		var l_name = textFields[1].value;
-		var tp_num = textFields[2].value;
+
+		var f_name = textFields[1].value;
+		var l_name = textFields[2].value;
+		var telephone_number = textFields[3].value;
 		var id = currentRow.getAttribute("id");
 
-		var payload = {"id" : id, "f_name": f_name, "l_name": l_name, "tp_num": tp_num, "table_name":TABLE_NAME, "id_name": ID_NAME};
+		var payload = {"id": id, "f_name": f_name, "l_name": l_name, "telephone_number": telephone_number, "table_name": TABLE_NAME, "id_name": ID_NAME};
 
 		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/edit', true);
 		req.setRequestHeader('Content-Type', 'application/json');
@@ -275,6 +274,7 @@ function retrieveDB(tableID, button){
 
 				var data = parseData(response);
 
+				// Build table
 				buildTable(tableID, data);
 			}
 			else{
@@ -294,107 +294,45 @@ function retrieveDB(tableID, button){
 
 function addToDB(tableID, button){
 	try{
-		var req = new XMLHttpRequest();
+		var req = new XMLHttpRequest();	
+		console.log("addToDB is called")
 		// Get data in the form
-		var first_name = document.getElementById("add_customer").elements["first_name"].value;
-		var last_name = document.getElementById("add_customer").elements["last_name"].value;
-		var tp_num = document.getElementById("add_customer").elements["phone_number"].value;
+		var f_name = document.getElementById("add_customer").elements["f_name"].value;
+		var l_name = document.getElementById("add_customer").elements["l_name"].value;
+		var telephone_number = document.getElementById("add_customer").elements["telephone_number"].value;
 
-		if(first_name != ""){
-			var getString = "table_name=" + TABLE_NAME + "&first_name=" + first_name + "&last_name=" + last_name + "&tp_num=" + tp_num;
-
+		if(f_name != ""){
+			var getString = "table_name=" + TABLE_NAME + "&f_name=" + f_name + "&l_name=" + l_name + "&telephone_number=" + telephone_number;
 			req.open('GET', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/insert?' + getString, true);
 
-			req.addEventListener('load', function(){
-					// Request was okay
-					if (req.status > 199 && req.status < 400){
-						// Parse data and put in array
-						if(req.response != null){
-							var response = req.response;
-						}
-						var data = parseData(response);
-
-						buildTable(tableID, data);
+			req.addEventListener('load', function(){			
+				// Request was okay
+				if (req.status > 199 && req.status < 400){
+					// Parse data and put in array
+					if(req.response != null){
+						console.log("response was successful");
+						var response = req.response;
 					}
-					else{
-						// Something went wrong
-						console.log("Error in GET request: " + req.statusText)
-					}
+					var data = parseData(response);
+					console.log(data);
+					buildTable(tableID, data);
+				}
+				else{
+					// Something went wrong
+					console.log("Error in GET request: " + req.statusText)
+				}
 			});
 
 			// Send request
 			req.send(null);
-			}
-			else{
-				alert("Name must be a value. Customer not added to Database.");
-			}
-
 		}
+		else{
+			alert("Name must be a value. Customer not added to Database.");
+		}
+
+	}
 	catch(e){
 		alert(e);
-	}
-}
-
-function buildTable(tableID, data){
-	var tBody = document.getElementById("dataTable").tBodies[0];
-
-	for(var i = 0; i < data.length; i++){
-		// Create rows
-		var row = document.createElement("tr");
-		var rowCount = table.rows.length;
-		
-		// Add columns
-		for(var j = 0; j < COLUMNS; j++){
-			var col = document.createElement("td");
-
-			// If we're in the last cell (column), make it hidden and id
-			if(j == COLUMNS-1){
-				var hiddenField = document.createElement("input");
-				hiddenField.setAttribute("type", "hidden");
-				// hiddenField.setAttribute("name", "id");
-				hiddenField.setAttribute("id", "id_" + data[i][ID_NAME]);
-				col.appendChild(hiddenField);
-			}
-			else{
-				// If we're not in the last 2 columns, add a textfield
-				if(j < COLUMNS-2){
-					// Add text field
-					var textField = document.createElement("input");
-					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
-					textField.readOnly = true;
-					col.appendChild(textField);
-				}
-				// If we're in the 2nd to last column, add buttons
-				else if(j == COLUMNS-2){
-					// Create edit button
-					var button = document.createElement("BUTTON");
-					button.addEventListener("click", function(){ editRow(TABLE_ID, this) });
-					button.innerHTML = "Edit";
-					col.append(button);
-			
-					// Create delete button
-					button = document.createElement("BUTTON");
-					button.addEventListener("click", function(){ deleteRow(TABLE_ID, this) });
-					button.innerHTML = "Delete";
-					col.append(button);
-				}
-
-				// Style td
-				col.style.border = '1px solid gray';
-			}
-
-			// Add column to row
-			row.appendChild(col);
-			row.setAttribute("id", data[i][ID_NAME]);
-		}
-
-		// Add row to table
-		tBody.appendChild(row);
-
-		// Fill in text data
-		for(key in data[i]){
-			document.getElementById(key + "_" + data[i][ID_NAME]).value = data[i][key];
-		}
 	}
 }
 
@@ -402,9 +340,9 @@ function search(tableID, button){
 	try{
 		var req = new XMLHttpRequest();
 
-		var payload = {"table_name": "customer"};
+		var payload = {"table_name": TABLE_NAME};
 
-		req.open('POST', 'http://flip3.engr.oregonstate.edu:'+ SQLPORT + '/search', true);
+		req.open('POST', 'http://flip3.engr.oregonstate.edu:' + SQLPORT + '/search', true);
 		req.setRequestHeader('Content-Type', 'application/json');
 
 		req.addEventListener('load', function(){			
@@ -472,6 +410,71 @@ function search(tableID, button){
 	}
 	catch(e){
 		alert(e);
+	}
+}
+
+function buildTable(tableID, data){
+	// Get first table body in table
+	//var tBody = document.getElementById(tableID).tBodies[0];
+	var tBody = document.getElementById("dataTable").tBodies[0];
+
+	for(var i = 0; i < data.length; i++){
+		// Create rows
+		var row = document.createElement("tr");
+		var rowCount = table.rows.length;
+		
+		// Add columns
+		for(var j = 0; j < COLUMNS; j++){
+			var col = document.createElement("td");
+
+			// If we're in the last cell (column), make it hidden and id
+			if(j == COLUMNS-1){
+				var hiddenField = document.createElement("input");
+				hiddenField.setAttribute("type", "hidden");
+				// hiddenField.setAttribute("name", "id");
+				hiddenField.setAttribute("id", "id_" + data[i][ID_NAME]);
+				col.appendChild(hiddenField);
+			}
+			else{
+				// If we're not in the last 2 columns, add a textfield
+				if(j < COLUMNS-2){
+					// Add text field
+					var textField = document.createElement("input");
+					textField.setAttribute("id", HEADER_NAMES[j].toLowerCase() + "_" + data[i][ID_NAME]);
+					textField.readOnly = true;
+					col.appendChild(textField);
+				}
+				// If we're in the 2nd to last column, add buttons
+				else if(j == COLUMNS-2){
+					// Create edit button
+					var button = document.createElement("BUTTON");
+					button.addEventListener("click", function(){ editRow(TABLE_ID, this) });
+					button.innerHTML = "Edit";
+					col.append(button);
+			
+					// Create delete button
+					button = document.createElement("BUTTON");
+					button.addEventListener("click", function(){ deleteRow(TABLE_ID, this) });
+					button.innerHTML = "Delete";
+					col.append(button);
+				}
+
+				// Style td
+				col.style.border = '1px solid gray';
+			}
+
+			// Add column to row
+			row.appendChild(col);
+			row.setAttribute("id", data[i][ID_NAME]);
+		}
+
+		// Add row to table
+		tBody.appendChild(row);
+
+		// Fill in text data
+		for(key in data[i]){
+			document.getElementById(key + "_" + data[i][ID_NAME]).value = data[i][key];
+		}
 	}
 }
 

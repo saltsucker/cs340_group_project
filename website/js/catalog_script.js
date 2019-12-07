@@ -313,7 +313,7 @@ function retrieveDB(tableID, button){
 function addToDB(tableID, button){
 	try{
 		var req = new XMLHttpRequest();	
-
+		console.log("addToDB called")
 		// Get data in the form
 		var artist_name = document.getElementById("add_album").elements["artist_name"].value;
 		var album_name = document.getElementById("add_album").elements["album_name"].value;
